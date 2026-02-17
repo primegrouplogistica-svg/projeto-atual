@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DailyRoute, RouteDeparture, Fueling, MaintenanceRequest, Toll, AgregadoFreight, FixedExpense, FuelingStatus, MaintenanceStatus, FinanceiroStatus, User, UserRole } from '../types';
-import { Card } from '../components/UI';
+import { Card, Select } from '../components/UI';
 
 type TipoFiltro = 'todos' | 'entradas' | 'saidas';
 type PapelEquipeFiltro = 'todos' | 'motorista' | 'ajudante';
@@ -52,6 +52,9 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
   const [copiadoPessoa, setCopiadoPessoa] = useState<string | null>(null);
   const [copiadoCategoria, setCopiadoCategoria] = useState<string | null>(null);
   const [copiadoReceita, setCopiadoReceita] = useState<string | null>(null);
+  const [mostrarResumoAgregadosPorPlaca, setMostrarResumoAgregadosPorPlaca] = useState(false);
+  const [selectedPlacaAgregado, setSelectedPlacaAgregado] = useState('');
+  const [copiedKeyAgregado, setCopiedKeyAgregado] = useState<string | null>(null);
 
   const safeNum = (v: any) => {
     const n = Number(v);
@@ -256,6 +259,36 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
     return { itens: lista, total: Math.round(total * 100) / 100 };
   }, [movimentos]);
 
+  const agregadoFreightsNoPeriodo = useMemo(() => {
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    if (end) end.setHours(23, 59, 59, 999);
+    const filterDate = (d: string) => {
+      if (!start || !end) return true;
+      const date = new Date(d);
+      return date >= start && date <= end;
+    };
+    return agregadoFreights.filter(r => filterDate(r.data));
+  }, [agregadoFreights, startDate, endDate]);
+
+  const placaOptionsAgregado = useMemo(() => {
+    const plates = Array.from(new Set(agregadoFreightsNoPeriodo.map(f => f.placa).filter((p): p is string => !!p?.trim()))).sort();
+    return plates.map(p => ({ label: p, value: p }));
+  }, [agregadoFreightsNoPeriodo]);
+
+  const freightsPorPlacaAgregado = useMemo(() => {
+    if (!selectedPlacaAgregado) return [];
+    return agregadoFreightsNoPeriodo.filter(f => f.placa === selectedPlacaAgregado);
+  }, [agregadoFreightsNoPeriodo, selectedPlacaAgregado]);
+
+  const resumoPlacaAgregadoSelecionada = useMemo(() => {
+    if (freightsPorPlacaAgregado.length === 0) return null;
+    const nome = freightsPorPlacaAgregado[0].nomeAgregado || 'Sem nome';
+    const placa = freightsPorPlacaAgregado[0].placa || selectedPlacaAgregado;
+    const totalAPagar = freightsPorPlacaAgregado.reduce((s, f) => s + Number(f.valorAgregado || 0), 0);
+    return { nome, placa, totalAPagar: Math.round(totalAPagar * 100) / 100 };
+  }, [freightsPorPlacaAgregado, selectedPlacaAgregado]);
+
   const { listaMotoristas, listaAjudantes } = useMemo(() => {
     const motoristasMap = new Map<string, { nome: string; valor: number }>();
     const ajudantesMap = new Map<string, { nome: string; valor: number }>();
@@ -366,6 +399,10 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
   };
 
   const copiarRelatorioCategoria = async (categoriaLabel: string, valorTotal: number) => {
+    if (categoriaLabel === 'Agregados') {
+      setMostrarResumoAgregadosPorPlaca(prev => !prev);
+      return;
+    }
     const cats = categoriasParaFiltro(categoriaLabel);
     const linhas = movimentos.filter(m => m.tipo === 'saida' && cats.includes(m.categoria));
     linhas.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
@@ -381,6 +418,24 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
       setCopiadoCategoria(categoriaLabel);
       setTimeout(() => setCopiadoCategoria(null), 2500);
     } catch (_) {}
+  };
+
+  const copiarResumoDetalhadoAgregadoWhatsApp = () => {
+    if (!resumoPlacaAgregadoSelecionada) return;
+    const periodo = startDate && endDate ? `${startDate} a ${endDate}` : startDate ? `a partir de ${startDate}` : endDate ? `até ${endDate}` : 'todo o período';
+    let msg = `📋 *Resumo - ${resumoPlacaAgregadoSelecionada.nome}*\nPlaca: ${resumoPlacaAgregadoSelecionada.placa}\nPeríodo: ${periodo}\n\n`;
+    freightsPorPlacaAgregado.forEach(f => {
+      const data = new Date(f.data).toLocaleDateString('pt-BR');
+      const oc = f.oc || '—';
+      const dest = f.destino || '—';
+      const valor = Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      msg += `• ${data} | OC ${oc} | ${dest} → R$ ${valor}\n`;
+    });
+    msg += `\n*Total a pagar: R$ ${resumoPlacaAgregadoSelecionada.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n\n_Prime Group_`;
+    navigator.clipboard.writeText(msg).then(() => {
+      setCopiedKeyAgregado(selectedPlacaAgregado);
+      setTimeout(() => setCopiedKeyAgregado(null), 2000);
+    });
   };
 
   const copiarRelatorioPessoa = async (tipo: 'motorista' | 'ajudante', id: string, nome: string, valorTotal: number) => {
@@ -559,11 +614,12 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
                   key={categoria}
                   type="button"
                   onClick={() => copiarRelatorioCategoria(categoria, valor)}
-                  className="flex justify-between items-center py-3 px-4 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-slate-600 hover:bg-slate-900/50 transition-all text-left gap-2"
+                  className={`flex justify-between items-center py-3 px-4 rounded-xl bg-slate-950/50 border transition-all text-left gap-2 ${categoria === 'Agregados' ? 'border-teal-800/60 hover:border-teal-700 hover:bg-teal-950/30' : 'border-slate-800 hover:border-slate-600 hover:bg-slate-900/50'}`}
                 >
-                  <span className="text-slate-300 font-medium text-sm truncate">{categoria}</span>
+                  <span className="text-slate-300 font-medium text-sm truncate">{categoria === 'Agregados' ? 'Agregados — Resumo por placa' : categoria}</span>
                   <span className="text-red-400 font-black tabular-nums shrink-0">R$ {valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                  {copiadoCategoria === categoria && <span className="text-[10px] text-emerald-500 font-bold shrink-0">Copiado!</span>}
+                  {categoria !== 'Agregados' && copiadoCategoria === categoria && <span className="text-[10px] text-emerald-500 font-bold shrink-0">Copiado!</span>}
+                  {categoria === 'Agregados' && mostrarResumoAgregadosPorPlaca && <span className="text-[10px] text-teal-400 font-bold shrink-0">▼ aberto</span>}
                 </button>
               ))}
             </div>
@@ -574,6 +630,68 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
           </>
         )}
       </Card>
+
+      {mostrarResumoAgregadosPorPlaca && (
+        <Card className="border-teal-900/40 bg-teal-950/20">
+          <h3 className="text-sm font-black uppercase tracking-widest mb-1 text-teal-400">Resumo por placa (Agregados)</h3>
+          <p className="text-[10px] text-slate-500 mb-4">Selecione uma placa para ver o total a pagar, dias, OC e destino. Clique em &quot;Copiar para WhatsApp&quot; para enviar o resumo detalhado.</p>
+          <div className="mb-4 max-w-xs">
+            <Select
+              label="Filtrar Placa"
+              value={selectedPlacaAgregado}
+              onChange={setSelectedPlacaAgregado}
+              options={[{ label: '— Selecione uma placa —', value: '' }, ...placaOptionsAgregado]}
+            />
+          </div>
+          {!selectedPlacaAgregado ? (
+            <p className="text-slate-500 text-sm py-4">Selecione uma placa acima para ver o resumo (Data, OC, Destino e valor a pagar).</p>
+          ) : resumoPlacaAgregadoSelecionada ? (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <div>
+                  <span className="text-slate-400 text-xs font-bold uppercase">Agregado:</span>
+                  <span className="ml-2 text-white font-black">{resumoPlacaAgregadoSelecionada.nome}</span>
+                  <span className="ml-2 font-mono text-blue-400 font-bold">{resumoPlacaAgregadoSelecionada.placa}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-red-400 font-black text-lg">R$ {resumoPlacaAgregadoSelecionada.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} a pagar</span>
+                  <button
+                    type="button"
+                    onClick={copiarResumoDetalhadoAgregadoWhatsApp}
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest"
+                  >
+                    {copiedKeyAgregado === selectedPlacaAgregado ? 'Copiado!' : 'Copiar para WhatsApp'}
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-slate-800">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                    <tr>
+                      <th className="p-3">Data</th>
+                      <th className="p-3">OC</th>
+                      <th className="p-3">Destino</th>
+                      <th className="p-3 text-right">Valor a pagar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {freightsPorPlacaAgregado.map(f => (
+                      <tr key={f.id} className="border-t border-slate-800 hover:bg-slate-800/50">
+                        <td className="p-3 font-mono text-slate-300">{new Date(f.data).toLocaleDateString('pt-BR')}</td>
+                        <td className="p-3 font-bold text-slate-200">{f.oc || '—'}</td>
+                        <td className="p-3 text-slate-400">{f.destino || '—'}</td>
+                        <td className="p-3 text-right font-black text-red-400">R$ {Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <p className="text-slate-500 text-sm py-4">Nenhum frete no período para esta placa.</p>
+          )}
+        </Card>
+      )}
 
       <Card className="border-slate-800">
         <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-white">Valores por pessoa (período selecionado)</h3>
