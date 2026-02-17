@@ -139,7 +139,8 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
             </div>
           ) : (
             <BigButton 
-              onClick={() => {}} 
+              type="submit"
+              onClick={() => {}}
               variant="primary" 
               disabled={!agregadoId || !valorFrete || !valorAgregado || !oc}
             >
