@@ -242,39 +242,18 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
       { label: 'Manutenção', key: 'Manutenção' },
       { label: 'Equipe (motorista e ajudante)', key: '__equipe__' },
       { label: 'Despesa fixa e parcelada', key: 'Despesa fixa' },
+      { label: 'Agregados', key: 'Agregados' },
     ];
-    const lista: { categoria: string; valor: number; placa?: string }[] = [];
+    const lista: { categoria: string; valor: number }[] = [];
     ordem.forEach(({ label, key }) => {
       const v = key === '__equipe__' ? equipeTotal : (byCat.get(key) ?? 0);
       if (v > 0) lista.push({ categoria: label, valor: Math.round(v * 100) / 100 });
     });
-    const agregadosPorPlaca = saidas
-      .filter(m => m.categoria === 'Agregados' && (m.placa?.trim() ?? '') !== '')
-      .reduce((acc, m) => {
-        const p = m.placa!.trim();
-        acc.set(p, (acc.get(p) ?? 0) + m.valor);
-        return acc;
-      }, new Map<string, number>());
-    Array.from(agregadosPorPlaca.entries())
-      .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
-      .forEach(([placa, valor]) => lista.push({ categoria: `Agregados — ${placa}`, valor: Math.round(valor * 100) / 100, placa }));
-    const rest = Array.from(byCat.entries()).filter(([c]) => !['Equipe (Motorista)', 'Equipe (Ajudante)', 'Agregados', ...ordem.map(o => o.key)].includes(c));
+    const rest = Array.from(byCat.entries()).filter(([c]) => !['Equipe (Motorista)', 'Equipe (Ajudante)', ...ordem.map(o => o.key)].includes(c));
     rest.forEach(([cat, v]) => lista.push({ categoria: cat, valor: Math.round(v * 100) / 100 }));
     const total = lista.reduce((s, i) => s + i.valor, 0);
     return { itens: lista, total: Math.round(total * 100) / 100 };
   }, [movimentos]);
-
-  const agregadoFreightsNoPeriodo = useMemo(() => {
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    if (end) end.setHours(23, 59, 59, 999);
-    const filterDate = (d: string) => {
-      if (!start || !end) return true;
-      const date = new Date(d);
-      return date >= start && date <= end;
-    };
-    return agregadoFreights.filter(r => filterDate(r.data));
-  }, [agregadoFreights, startDate, endDate]);
 
   const { listaMotoristas, listaAjudantes } = useMemo(() => {
     const motoristasMap = new Map<string, { nome: string; valor: number }>();
@@ -383,27 +362,6 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
       setCopiadoReceita('agregados');
       setTimeout(() => setCopiadoReceita(null), 2500);
     } catch (_) {}
-  };
-
-  const copiarResumoPlacaAgregadoWhatsApp = (placa: string) => {
-    const freights = agregadoFreightsNoPeriodo.filter(f => f.placa === placa);
-    if (freights.length === 0) return;
-    const nome = freights[0].nomeAgregado || 'Sem nome';
-    const totalAPagar = freights.reduce((s, f) => s + Number(f.valorAgregado || 0), 0);
-    const periodo = startDate && endDate ? `${startDate} a ${endDate}` : startDate ? `a partir de ${startDate}` : endDate ? `até ${endDate}` : 'todo o período';
-    let msg = `📋 *Resumo - ${nome}*\nPlaca: ${placa}\nPeríodo: ${periodo}\n\n`;
-    freights.forEach(f => {
-      const data = new Date(f.data).toLocaleDateString('pt-BR');
-      const oc = f.oc || '—';
-      const dest = f.destino || '—';
-      const valor = Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-      msg += `• ${data} | OC ${oc} | ${dest} → R$ ${valor}\n`;
-    });
-    msg += `\n*Total a pagar: R$ ${totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n\n_Prime Group_`;
-    navigator.clipboard.writeText(msg).then(() => {
-      setCopiadoCategoria(`Agregados — ${placa}`);
-      setTimeout(() => setCopiadoCategoria(null), 2500);
-    });
   };
 
   const copiarRelatorioCategoria = async (categoriaLabel: string, valorTotal: number) => {
@@ -589,18 +547,18 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
 
       <Card className="border-slate-800">
         <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-white">Resumo das despesas (período)</h3>
-        <p className="text-slate-500 text-xs mb-4">Clique na categoria (ou na placa de agregado) para copiar o relatório para o WhatsApp.</p>
+        <p className="text-slate-500 text-xs mb-4">Clique na categoria para copiar o relatório (datas, placas e valores) para o WhatsApp.</p>
         {resumoDespesas.itens.length === 0 ? (
           <p className="text-slate-500 text-sm">Nenhuma despesa no período.</p>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {resumoDespesas.itens.map(({ categoria, valor, placa }) => (
+              {resumoDespesas.itens.map(({ categoria, valor }) => (
                 <button
                   key={categoria}
                   type="button"
-                  onClick={() => placa ? copiarResumoPlacaAgregadoWhatsApp(placa) : copiarRelatorioCategoria(categoria, valor)}
-                  className={`flex justify-between items-center py-3 px-4 rounded-xl bg-slate-950/50 border transition-all text-left gap-2 ${placa ? 'border-teal-800/60 hover:border-teal-700 hover:bg-teal-950/30' : 'border-slate-800 hover:border-slate-600 hover:bg-slate-900/50'}`}
+                  onClick={() => copiarRelatorioCategoria(categoria, valor)}
+                  className="flex justify-between items-center py-3 px-4 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-slate-600 hover:bg-slate-900/50 transition-all text-left gap-2"
                 >
                   <span className="text-slate-300 font-medium text-sm truncate">{categoria}</span>
                   <span className="text-red-400 font-black tabular-nums shrink-0">R$ {valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
