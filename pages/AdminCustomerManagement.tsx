@@ -35,6 +35,11 @@ const AdminCustomerManagement: React.FC<AdminCustomerManagementProps> = ({ custo
     setCustomers(prev => prev.map(c => c.id === id ? { ...c, ativo: !c.ativo } : c));
   };
 
+  const handleDelete = (customer: Customer) => {
+    if (!window.confirm(`Excluir o cliente "${customer.nome}"? Esta ação não pode ser desfeita.`)) return;
+    setCustomers(prev => prev.filter(c => c.id !== customer.id));
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
@@ -100,6 +105,13 @@ const AdminCustomerManagement: React.FC<AdminCustomerManagementProps> = ({ custo
                 className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest rounded transition-colors ${c.ativo ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40' : 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40'}`}
               >
                 {c.ativo ? 'Desativar' : 'Ativar'}
+              </button>
+              <button 
+                onClick={() => handleDelete(c)}
+                className="py-1.5 px-3 text-[10px] font-black uppercase tracking-widest rounded bg-slate-800 text-slate-400 hover:bg-red-950/40 hover:text-red-400 border border-slate-700 hover:border-red-900 transition-colors"
+                title="Excluir cliente"
+              >
+                Excluir
               </button>
             </div>
           </Card>

@@ -35,6 +35,11 @@ const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agreg
     onUpdateAgregados(agregados.map(a => a.id === id ? { ...a, ativo: !a.ativo } : a));
   };
 
+  const handleDelete = (agregado: Agregado) => {
+    if (!window.confirm(`Excluir o agregado "${agregado.nome}" (${agregado.placa})? Esta ação não pode ser desfeita.`)) return;
+    onUpdateAgregados(agregados.filter(a => a.id !== agregado.id));
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
@@ -90,6 +95,13 @@ const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agreg
                 className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest rounded transition-colors ${a.ativo ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40' : 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40'}`}
               >
                 {a.ativo ? 'Inativar' : 'Reativar'}
+              </button>
+              <button 
+                onClick={() => handleDelete(a)}
+                className="py-1.5 px-3 text-[10px] font-black uppercase tracking-widest rounded bg-slate-800 text-slate-400 hover:bg-red-950/40 hover:text-red-400 border border-slate-700 hover:border-red-900 transition-colors"
+                title="Excluir agregado"
+              >
+                Excluir
               </button>
             </div>
           </Card>
