@@ -51,18 +51,11 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
   const [avariaDescricao, setAvariaDescricao] = useState('');
   const [avariaFoto, setAvariaFoto] = useState<string | null>(null);
 
-  const isChecklistComplete = !!(
-    fotoFrente &&
-    fotoLatEsquerda &&
-    fotoLatDireita &&
-    fotoTraseira &&
-    nivelOleo &&
-    nivelAgua
-  );
+  const canSubmit = !!(clienteId && destino && oc);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!clienteId || !destino || !oc || !isChecklistComplete) return;
+    if (!canSubmit) return;
 
     const cliente = customers.find(c => c.id === clienteId);
 
@@ -79,12 +72,12 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
       valorMotorista: 0,
       valorAjudante: 0,
       statusFinanceiro: FinanceiroStatus.PENDENTE,
-      fotoFrente: fotoFrente || '',
-      fotoLateralEsquerda: fotoLatEsquerda || '',
-      fotoLateralDireita: fotoLatDireita || '',
-      fotoTraseira: fotoTraseira || '',
-      nivelOleo: nivelOleo!,
-      nivelAgua: nivelAgua!,
+      ...(fotoFrente && { fotoFrente }),
+      ...(fotoLatEsquerda && { fotoLateralEsquerda: fotoLatEsquerda }),
+      ...(fotoLatDireita && { fotoLateralDireita: fotoLatDireita }),
+      ...(fotoTraseira && { fotoTraseira }),
+      ...(nivelOleo && { nivelOleo }),
+      ...(nivelAgua && { nivelAgua }),
       createdAt: new Date().toISOString(),
       ...(avariaNova && {
         avariaNova: true,
@@ -176,10 +169,10 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
           />
           <div className="space-y-4">
             <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2 flex justify-between items-center">
-              Fotos da Inspeção (4 Externas)
+              Fotos da Inspeção (opcional)
               {(fotoFrente && fotoLatEsquerda && fotoLatDireita && fotoTraseira) && <span className="text-[10px] text-emerald-500 bg-emerald-950 px-2 py-0.5 rounded">FOTOS OK</span>}
             </h3>
-            <p className="text-[10px] text-slate-500">Toque em cada quadro para abrir a câmera e tirar a foto no momento.</p>
+            <p className="text-[10px] text-slate-500">Opcional. Toque em cada quadro para tirar foto se quiser.</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <PhotoSlot label="Frente" value={fotoFrente} onCapture={() => openCamera(setFotoFrente)} onClear={() => setFotoFrente(null)} />
               <PhotoSlot label="Lat. Esquerda" value={fotoLatEsquerda} onCapture={() => openCamera(setFotoLatEsquerda)} onClear={() => setFotoLatEsquerda(null)} />
@@ -230,12 +223,12 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
             )}
           </div>
 
-          {/* Níveis Técnicos Separados */}
+          {/* Níveis Técnicos Separados (opcional) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             {/* Nível de Óleo */}
             <div className="space-y-4">
               <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2">
-                Nível de Óleo do Motor
+                Nível de Óleo do Motor (opcional)
               </h3>
               <div className="flex flex-col gap-2">
                 <button
@@ -260,7 +253,7 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
             {/* Nível de Água */}
             <div className="space-y-4">
               <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2">
-                Nível de Água (Arrefecimento)
+                Nível de Água (Arrefecimento) (opcional)
               </h3>
               <div className="flex flex-col gap-2">
                 <button
@@ -284,18 +277,14 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
           </div>
 
           <div className="pt-4">
-            {!isChecklistComplete && (
-              <p className="text-[10px] text-red-400 font-bold italic text-center mb-4">
-                * As 4 fotos e as marcações de nível são obrigatórias.
-              </p>
-            )}
+            <p className="text-[10px] text-slate-500 text-center mb-4">Preencha cliente, destino e OC. Fotos e níveis são opcionais.</p>
             <button
               type="button"
               onClick={() => handleSubmit()}
-              disabled={!clienteId || !destino || !oc || !isChecklistComplete}
-              className={`relative w-full p-6 text-sm font-black uppercase tracking-widest rounded-2xl border-b-4 flex flex-col items-center justify-center gap-4 transition-all active:translate-y-1 active:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed ${isChecklistComplete ? 'bg-blue-700 hover:bg-blue-600 border-blue-600 text-white' : 'bg-slate-800 border-slate-700 text-slate-100'}`}
+              disabled={!canSubmit}
+              className={`relative w-full p-6 text-sm font-black uppercase tracking-widest rounded-2xl border-b-4 flex flex-col items-center justify-center gap-4 transition-all active:translate-y-1 active:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed ${canSubmit ? 'bg-blue-700 hover:bg-blue-600 border-blue-600 text-white' : 'bg-slate-800 border-slate-700 text-slate-100'}`}
             >
-              {isChecklistComplete ? "INICIAR ROTA" : "COMPLETE O CHECKLIST"}
+              INICIAR ROTA
             </button>
           </div>
         </form>
