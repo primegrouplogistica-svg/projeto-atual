@@ -217,6 +217,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
               <SectionHeader title="Operacional" />
               {hasPermission('admin-create-route') && <BigButton onClick={() => onNavigate('admin-create-route')} icon={<PlusCircle size={32} />} variant="indigo">Lançar Rota</BigButton>}
               {hasPermission('admin-fueling') && <BigButton onClick={() => onNavigate('admin-fueling')} icon={<Fuel size={32} />} variant="indigo">Lançar combustível</BigButton>}
+              {hasPermission('admin-fueling') && <BigButton onClick={() => onNavigate('admin-fueling-registry')} icon={<History size={32} />} variant="secondary">Registro de Abastecimentos</BigButton>}
               {hasPermission('admin-agregado-freight') && <BigButton onClick={() => onNavigate('admin-agregado-freight')} icon={<Truck size={32} />} variant="indigo">Frete Agregado</BigButton>}
               {hasPermission('admin-tolls') && <BigButton onClick={() => onNavigate('admin-tolls')} icon={<Milestone size={32} />} variant="indigo">Pedágios</BigButton>}
 

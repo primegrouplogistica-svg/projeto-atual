@@ -106,10 +106,7 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
       createdAt: new Date().toISOString()
     };
     onUpdateExpenses([newExp, ...fixedExpenses]);
-    setDescricao('');
-    setValor('');
-    setCategoriaOutra('');
-    setDiaVencimento('');
+    setDescricao(''); setValor(''); setCategoriaOutra(''); setDiaVencimento('');
   };
 
   const handleAddParceled = (e: React.FormEvent) => {
@@ -137,22 +134,13 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
       });
     }
     onUpdateExpenses([...parcelas, ...fixedExpenses]);
-    setParcDescricao('');
-    setParcValorTotal('');
-    setParcNumParcelas('');
-    setParcDiaVencimento('');
-    setParcCategoriaOutra('');
+    setParcDescricao(''); setParcValorTotal(''); setParcNumParcelas(''); setParcDiaVencimento(''); setParcCategoriaOutra('');
   };
 
   const filtered = useMemo(() => fixedExpenses.filter(e => e.dataCompetencia === mes), [fixedExpenses, mes]);
-
-  const total = useMemo(
-    () => filtered.reduce((acc, curr) => Number(acc) + Number(curr.valor || 0), 0),
-    [filtered]
-  );
-
-  const disabledNovo = !descricao || !valor;
-  const disabledParcelado = !parcDescricao.trim() || !parcValorTotal || Number(parcValorTotal) <= 0;
+  
+  // Garantia de soma numérica real para despesas fixas
+  const total = useMemo(() => filtered.reduce((acc, curr) => Number(acc) + Number(curr.valor || 0), 0), [filtered]);
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
@@ -161,116 +149,39 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
           <h2 className="text-3xl font-black uppercase text-white tracking-tight">Custos Estruturais</h2>
           <p className="text-slate-500 text-sm">Administração de despesas fixas mensais</p>
         </div>
-        <button
-          onClick={onBack}
-          className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs text-white"
-        >
-          Voltar
-        </button>
+        <button onClick={onBack} className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs text-white">Voltar</button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
           <Card className="border-indigo-900/30">
-            <h3 className="text-xs font-black text-indigo-400 uppercase tracking-[0.2em] mb-6">
-              Novo Lançamento
-            </h3>
+            <h3 className="text-xs font-black text-indigo-400 uppercase tracking-[0.2em] mb-6">Novo Lançamento</h3>
             <form onSubmit={handleAddExpense} className="space-y-4">
               <Select label="Categoria" value={categoria} onChange={setCategoria} options={CATEGORIA_OPTIONS} />
               {categoria === '__outra__' && (
-                <Input
-                  label="Nome da categoria"
-                  value={categoriaOutra}
-                  onChange={setCategoriaOutra}
-                  placeholder="Digite a categoria"
-                />
+                <Input label="Nome da categoria" value={categoriaOutra} onChange={setCategoriaOutra} placeholder="Digite a categoria" />
               )}
               <Input label="Mês de Referência" type="month" value={mes} onChange={setMes} />
-              <Input
-                label="Dia do vencimento (1-31)"
-                type="number"
-                value={diaVencimento}
-                onChange={setDiaVencimento}
-                placeholder="Opcional"
-              />
-              <Input
-                label="Descrição do Gasto"
-                value={descricao}
-                onChange={setDescricao}
-                placeholder="Descrição do gasto"
-              />
-              <Input
-                label="Valor (R$)"
-                type="number"
-                value={valor}
-                onChange={setValor}
-                placeholder="0.00"
-              />
-              <BigButton type="submit" onClick={() => {}} disabled={disabledNovo}>
-                CONFIRMAR GASTO
-              </BigButton>
+              <Input label="Dia do vencimento (1-31)" type="number" value={diaVencimento} onChange={setDiaVencimento} placeholder="Opcional" />
+              <Input label="Descrição do Gasto" value={descricao} onChange={setDescricao} placeholder="Descrição do gasto" />
+              <Input label="Valor (R$)" type="number" value={valor} onChange={setValor} placeholder="0.00" />
+              <BigButton onClick={() => {}}>CONFIRMAR GASTO</BigButton>
             </form>
           </Card>
 
           <Card className="border-amber-900/30 bg-amber-950/10">
-            <h3 className="text-xs font-black text-amber-400 uppercase tracking-[0.2em] mb-6">
-              Despesa parcelada
-            </h3>
+            <h3 className="text-xs font-black text-amber-400 uppercase tracking-[0.2em] mb-6">Despesa parcelada</h3>
             <form onSubmit={handleAddParceled} className="space-y-4">
-              <Select
-                label="Categoria"
-                value={parcCategoria}
-                onChange={setParcCategoria}
-                options={CATEGORIA_OPTIONS}
-              />
+              <Select label="Categoria" value={parcCategoria} onChange={setParcCategoria} options={CATEGORIA_OPTIONS} />
               {parcCategoria === '__outra__' && (
-                <Input
-                  label="Nome da categoria"
-                  value={parcCategoriaOutra}
-                  onChange={setParcCategoriaOutra}
-                  placeholder="Digite a categoria"
-                />
+                <Input label="Nome da categoria" value={parcCategoriaOutra} onChange={setParcCategoriaOutra} placeholder="Digite a categoria" />
               )}
-              <Input
-                label="Descrição"
-                value={parcDescricao}
-                onChange={setParcDescricao}
-                placeholder="Descrição"
-                required
-              />
-              <Input
-                label="Valor total (R$)"
-                type="number"
-                value={parcValorTotal}
-                onChange={setParcValorTotal}
-                placeholder="0.00"
-                required
-              />
-              <Input
-                label="Número de parcelas"
-                type="number"
-                value={parcNumParcelas}
-                onChange={setParcNumParcelas}
-                placeholder="3"
-              />
-              <Input
-                label="1ª parcela (mês/ano)"
-                type="month"
-                value={parcPrimeiraData}
-                onChange={setParcPrimeiraData}
-              />
-              <Input
-                label="Dia do vencimento (1-31)"
-                type="number"
-                value={parcDiaVencimento}
-                onChange={setParcDiaVencimento}
-                placeholder="Opcional"
-              />
-              <BigButton
-                type="submit"
-                onClick={() => {}}
-                disabled={disabledParcelado}
-              >
+              <Input label="Descrição" value={parcDescricao} onChange={setParcDescricao} placeholder="Descrição" required />
+              <Input label="Valor total (R$)" type="number" value={parcValorTotal} onChange={setParcValorTotal} placeholder="0.00" required />
+              <Input label="Número de parcelas" type="number" value={parcNumParcelas} onChange={setParcNumParcelas} placeholder="3" />
+              <Input label="1ª parcela (mês/ano)" type="month" value={parcPrimeiraData} onChange={setParcPrimeiraData} />
+              <Input label="Dia do vencimento (1-31)" type="number" value={parcDiaVencimento} onChange={setParcDiaVencimento} placeholder="Opcional" />
+              <BigButton onClick={() => {}} disabled={!parcDescricao.trim() || !parcValorTotal || Number(parcValorTotal) <= 0}>
                 LANÇAR PARCELAS
               </BigButton>
             </form>
@@ -279,28 +190,17 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
 
         <Card className="lg:col-span-2 bg-slate-900/40">
           <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
-            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
-              Total Acumulado ({mes}):
-            </span>
-            <span className="text-3xl font-black text-white">
-              R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </span>
+            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Total Acumulado ({mes}):</span>
+            <span className="text-3xl font-black text-white">R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
           </div>
           <div className="space-y-3">
             {filtered.length === 0 ? (
-              <div className="py-20 text-center text-slate-700 italic text-sm">
-                Nenhuma despesa para este período.
-              </div>
+              <div className="py-20 text-center text-slate-700 italic text-sm">Nenhuma despesa para este período.</div>
             ) : (
               filtered.map(e => (
-                <div
-                  key={e.id}
-                  className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex justify-between items-center group hover:border-slate-700 transition-all gap-3"
-                >
+                <div key={e.id} className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex justify-between items-center group hover:border-slate-700 transition-all gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-black text-slate-200 uppercase tracking-tight truncate">
-                      {e.descricao}
-                    </div>
+                    <div className="text-xs font-black text-slate-200 uppercase tracking-tight truncate">{e.descricao}</div>
                     <div className="text-[9px] text-slate-600 font-bold uppercase mt-1 flex items-center gap-2">
                       {e.categoria}
                       {e.diaVencimento != null && e.diaVencimento >= 1 && e.diaVencimento <= 31 && (
@@ -308,9 +208,7 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
                       )}
                     </div>
                   </div>
-                  <span className="text-sm font-black text-red-400 shrink-0">
-                    R$ {Number(e.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
+                  <span className="text-sm font-black text-red-400 shrink-0">R$ {Number(e.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   <div className="flex items-center gap-1 shrink-0 no-print">
                     <button
                       type="button"
@@ -336,65 +234,21 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
         </Card>
       </div>
 
-      <Modal
-        isOpen={!!editingExpense}
-        onClose={closeEdit}
-        title="Editar custo (fixo ou parcelado)"
-      >
+      <Modal isOpen={!!editingExpense} onClose={closeEdit} title="Editar custo (fixo ou parcelado)">
         <form onSubmit={handleSaveEdit} className="space-y-4">
-          <Select
-            label="Categoria"
-            value={editCategoria}
-            onChange={setEditCategoria}
-            options={CATEGORIA_OPTIONS}
-          />
+          <Select label="Categoria" value={editCategoria} onChange={setEditCategoria} options={CATEGORIA_OPTIONS} />
           {editCategoria === '__outra__' && (
-            <Input
-              label="Nome da categoria"
-              value={editCategoriaOutra}
-              onChange={setEditCategoriaOutra}
-              placeholder="Digite a categoria"
-            />
+            <Input label="Nome da categoria" value={editCategoriaOutra} onChange={setEditCategoriaOutra} placeholder="Digite a categoria" />
           )}
-          <Input
-            label="Mês de referência"
-            type="month"
-            value={editDataCompetencia}
-            onChange={setEditDataCompetencia}
-          />
-          <Input
-            label="Dia do vencimento (1-31)"
-            type="number"
-            value={editDiaVencimento}
-            onChange={setEditDiaVencimento}
-            placeholder="Opcional"
-          />
-          <Input
-            label="Descrição"
-            value={editDescricao}
-            onChange={setEditDescricao}
-            placeholder="Descrição do gasto"
-          />
-          <Input
-            label="Valor (R$)"
-            type="number"
-            value={editValor}
-            onChange={setEditValor}
-            placeholder="0.00"
-          />
+          <Input label="Mês de referência" type="month" value={editDataCompetencia} onChange={setEditDataCompetencia} />
+          <Input label="Dia do vencimento (1-31)" type="number" value={editDiaVencimento} onChange={setEditDiaVencimento} placeholder="Opcional" />
+          <Input label="Descrição" value={editDescricao} onChange={setEditDescricao} placeholder="Descrição do gasto" />
+          <Input label="Valor (R$)" type="number" value={editValor} onChange={setEditValor} placeholder="0.00" />
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={closeEdit}
-              className="px-6 py-3 rounded-xl font-bold border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors uppercase text-xs tracking-widest"
-            >
+            <button type="button" onClick={closeEdit} className="px-6 py-3 rounded-xl font-bold border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors uppercase text-xs tracking-widest">
               Cancelar
             </button>
-            <button
-              type="submit"
-              disabled={!editDescricao.trim() || editValor === '' || Number(editValor) < 0}
-              className="px-6 py-3 rounded-xl font-bold border border-blue-600 bg-blue-700 text-white hover:bg-blue-600 transition-colors uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button type="submit" disabled={!editDescricao.trim() || editValor === '' || Number(editValor) < 0} className="px-6 py-3 rounded-xl font-bold border border-blue-600 bg-blue-700 text-white hover:bg-blue-600 transition-colors uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed">
               Salvar
             </button>
           </div>

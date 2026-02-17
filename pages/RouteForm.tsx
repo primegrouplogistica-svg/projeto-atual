@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User, UserSession, RouteDeparture, RouteStatus, Customer, FinanceiroStatus } from '../types';
 import { Card, Input, BigButton, Select } from '../components/UI';
@@ -75,13 +76,7 @@ const RouteForm: React.FC<RouteFormProps> = ({ session, user, drivers, customers
             Atenção: Registre a saída corretamente. O valor financeiro será atribuído pelo administrador na aba "Pendências &gt; Financeiro".
           </div>
 
-          <BigButton
-            type="button"
-            onClick={() => handleSubmit()}
-            disabled={!clienteId || !destino || !oc || !motoristaId}
-          >
-            INICIAR ROTA
-          </BigButton>
+          <BigButton type="button" onClick={() => handleSubmit()} disabled={!clienteId || !destino || !oc || !motoristaId}>INICIAR ROTA</BigButton>
         </form>
       </Card>
     </div>
