@@ -138,7 +138,7 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
   };
 
   const filtered = useMemo(() => fixedExpenses.filter(e => e.dataCompetencia === mes), [fixedExpenses, mes]);
-
+  
   // Garantia de soma numérica real para despesas fixas
   const total = useMemo(() => filtered.reduce((acc, curr) => Number(acc) + Number(curr.valor || 0), 0), [filtered]);
 
