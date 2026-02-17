@@ -24,8 +24,8 @@ const FuelingForm: React.FC<FuelingFormProps> = ({ session, user, onSubmit, onBa
     e.target.value = '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!km || !valor || !fotoNota) return;
 
     const newFueling: Fueling = {
@@ -90,7 +90,11 @@ const FuelingForm: React.FC<FuelingFormProps> = ({ session, user, onSubmit, onBa
             </div>
           </div>
 
-          <BigButton type="submit" disabled={!km || !valor || !fotoNota}>
+          <BigButton
+            type="button"
+            onClick={() => handleSubmit()}
+            disabled={!km || !valor || !fotoNota}
+          >
             ENVIAR PARA APROVAÇÃO
           </BigButton>
         </form>
