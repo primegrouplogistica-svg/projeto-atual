@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { AgregadoFreight } from '../types';
 import { Card, Input, Select } from '../components/UI';
@@ -145,11 +144,12 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
         </div>
       </Card>
 
-      {selectedPlaca && (
-        <Card className="border-teal-900/40 bg-teal-950/20">
-          <h3 className="text-sm font-black uppercase tracking-widest mb-1 text-teal-400">Resumo por placa</h3>
-          <p className="text-[10px] text-slate-500 mb-4">Total a pagar, com dias, OC e destino. Clique em &quot;Copiar para WhatsApp&quot; para enviar o resumo detalhado.</p>
-          {resumoPlacaSelecionada ? (
+      <Card className="border-teal-900/40 bg-teal-950/20">
+        <h3 className="text-sm font-black uppercase tracking-widest mb-1 text-teal-400">Resumo por placa</h3>
+        <p className="text-[10px] text-slate-500 mb-4">Selecione uma placa no filtro acima para ver o total a pagar, dias, OC e destino. Clique em &quot;Copiar para WhatsApp&quot; para enviar o resumo detalhado.</p>
+        {!selectedPlaca ? (
+          <p className="text-slate-500 text-sm py-4">Selecione uma placa em &quot;Filtrar Placa&quot; acima para ver o resumo (dias, OC, destino e valor a pagar).</p>
+        ) : resumoPlacaSelecionada ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <div>
@@ -191,11 +191,10 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
                 </table>
               </div>
             </>
-          ) : (
-            <p className="text-slate-500 text-sm py-4">Nenhum frete no período para esta placa.</p>
-          )}
-        </Card>
-      )}
+        ) : (
+          <p className="text-slate-500 text-sm py-4">Nenhum frete no período para esta placa.</p>
+        )}
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="text-center bg-slate-900/50 border-slate-800">
