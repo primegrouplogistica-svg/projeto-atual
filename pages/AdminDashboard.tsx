@@ -45,9 +45,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [anoSelecionado, setAnoSelecionado] = useState<string>('');
 
   const opcoesAno = useMemo(() => {
-    const atual = new Date().getFullYear();
     const anos: { label: string; value: string }[] = [{ label: '— Todos —', value: '' }];
-    for (let y = 2020; y <= atual + 3; y++) anos.push({ label: String(y), value: String(y) });
+    for (let y = 2026; y <= 2036; y++) anos.push({ label: String(y), value: String(y) });
     return anos;
   }, []);
 
