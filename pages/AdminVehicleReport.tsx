@@ -30,10 +30,22 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [agrupamento, setAgrupamento] = useState<'periodo' | 'mes' | 'ano'>('periodo');
+  const [anoSelecionado, setAnoSelecionado] = useState<string>('');
+
+  const opcoesAno = useMemo(() => {
+    const atual = new Date().getFullYear();
+    const anos: { label: string; value: string }[] = [{ label: '— Todos —', value: '' }];
+    for (let y = 2020; y <= atual + 3; y++) anos.push({ label: String(y), value: String(y) });
+    return anos;
+  }, []);
 
   const dateFilteredData = useMemo(() => {
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    let start = startDate ? new Date(startDate) : null;
+    let end = endDate ? new Date(endDate) : null;
+    if (anoSelecionado) {
+      start = new Date(`${anoSelecionado}-01-01`);
+      end = new Date(`${anoSelecionado}-12-31`);
+    }
     if (end) end.setHours(23, 59, 59, 999);
     
     const filterByDate = (dateStr: string) => {
@@ -42,8 +54,13 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
       return d >= start && d <= end;
     };
 
-    // Despesas fixas: sem período = todas; com período = competência do mês da data inicial
-    const feFiltered = !startDate ? fixedExpenses : fixedExpenses.filter(x => x.dataCompetencia === startDate.slice(0, 7));
+    // Despesas fixas: sem período = todas; com período = competência dentro do intervalo
+    const feStart = start ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}` : '';
+    const feEnd = end ? `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}` : '';
+    const feFiltered = !start || !end ? fixedExpenses : fixedExpenses.filter(x => {
+      const comp = x.dataCompetencia || '';
+      return comp >= feStart && comp <= feEnd;
+    });
 
     return {
       f: fuelings.filter(x => filterByDate(x.createdAt)),
@@ -53,7 +70,7 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
       t: tolls.filter(x => filterByDate(x.data)),
       fe: feFiltered
     };
-  }, [startDate, endDate, fuelings, maintenances, dailyRoutes, routes, tolls, fixedExpenses]);
+  }, [startDate, endDate, anoSelecionado, fuelings, maintenances, dailyRoutes, routes, tolls, fixedExpenses]);
 
   const vehicleStats = useMemo(() => {
     const { f, m, dr, r, t } = dateFilteredData;
@@ -119,8 +136,12 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
 
   /** Agregação por mês ou ano para relatório e gráfico de evolução */
   const desempenhoPorPeriodo = useMemo(() => {
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    let start = startDate ? new Date(startDate) : null;
+    let end = endDate ? new Date(endDate) : null;
+    if (anoSelecionado) {
+      start = new Date(`${anoSelecionado}-01-01`);
+      end = new Date(`${anoSelecionado}-12-31`);
+    }
     if (end) end.setHours(23, 59, 59, 999);
     const inRange = (dateStr: string) => {
       if (!dateStr) return false;
@@ -128,7 +149,9 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
       const d = new Date(dateStr);
       return d >= start && d <= end;
     };
-    const inRangeCompetencia = (comp: string) => !start || !end || (comp >= startDate!.slice(0, 7) && comp <= endDate!.slice(0, 7));
+    const compStart = start ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}` : '';
+    const compEnd = end ? `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}` : '';
+    const inRangeCompetencia = (comp: string) => !start || !end || (comp >= compStart && comp <= compEnd);
 
     const meses = new Set<string>();
     const anos = new Set<string>();
@@ -195,7 +218,7 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
     });
 
     return list;
-  }, [fuelings, maintenances, dailyRoutes, routes, tolls, fixedExpenses, agrupamento, startDate, endDate]);
+  }, [fuelings, maintenances, dailyRoutes, routes, tolls, fixedExpenses, agrupamento, startDate, endDate, anoSelecionado]);
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
@@ -208,7 +231,7 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
       </div>
 
       <Card className="no-print bg-slate-900/40 border-slate-800">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Input label="Data Início" type="date" value={startDate} onChange={setStartDate} />
           <Input label="Data Fim" type="date" value={endDate} onChange={setEndDate} />
           <Select
@@ -221,6 +244,14 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
               { label: 'Por ano', value: 'ano' }
             ]}
           />
+          {agrupamento === 'ano' && (
+            <Select
+              label="Selecionar ano"
+              value={anoSelecionado}
+              onChange={setAnoSelecionado}
+              options={opcoesAno}
+            />
+          )}
         </div>
       </Card>
 

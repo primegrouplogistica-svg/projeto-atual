@@ -42,6 +42,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [agrupamento, setAgrupamento] = useState<'periodo' | 'mes' | 'ano'>('periodo');
+  const [anoSelecionado, setAnoSelecionado] = useState<string>('');
+
+  const opcoesAno = useMemo(() => {
+    const atual = new Date().getFullYear();
+    const anos: { label: string; value: string }[] = [{ label: '— Todos —', value: '' }];
+    for (let y = 2020; y <= atual + 3; y++) anos.push({ label: String(y), value: String(y) });
+    return anos;
+  }, []);
 
   const { receitaFretes, receitaAgregados, totalFretes, totalDespesas, despesasPorCategoria } = useMemo(() => {
     const safeNum = (val: any): number => {
@@ -49,8 +57,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       return isNaN(n) ? 0 : n;
     };
 
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    let start = startDate ? new Date(startDate) : null;
+    let end = endDate ? new Date(endDate) : null;
+    if (anoSelecionado) {
+      start = new Date(`${anoSelecionado}-01-01`);
+      end = new Date(`${anoSelecionado}-12-31`);
+    }
     if (end) end.setHours(23, 59, 59, 999);
 
     const filterDate = (d: string) => {
@@ -67,7 +79,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const tollsF = tolls.filter(t => filterDate(t.data));
     const agregadoF = agregadoFreights.filter(r => filterDate(r.data));
     // Despesas fixas e parceladas: só entram parcelas cuja data de competência (mês) está dentro do período
-    const feFiltered = !startDate && !endDate ? fixedExpenses : fixedExpenses.filter(e => filterDate((e.dataCompetencia || e.createdAt.slice(0, 7)) + '-01'));
+    const feFiltered = !start || !end ? fixedExpenses : fixedExpenses.filter(e => filterDate((e.dataCompetencia || e.createdAt?.slice(0, 7) || '') + '-01'));
 
     const despesaFixaOnly = feFiltered.filter(e => !isDespesaParcelada(e)).reduce((sum, e) => sum + safeNum(e.valor), 0);
     const despesaParcelada = feFiltered.filter(e => isDespesaParcelada(e)).reduce((sum, e) => sum + safeNum(e.valor), 0);
@@ -108,14 +120,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }));
 
     return { receitaFretes, receitaAgregados, totalFretes, totalDespesas, despesasPorCategoria };
-  }, [fuelings, maintenances, vehicles, fixedExpenses, dailyRoutes, routes, agregadoFreights, tolls, startDate, endDate]);
+  }, [fuelings, maintenances, vehicles, fixedExpenses, dailyRoutes, routes, agregadoFreights, tolls, startDate, endDate, anoSelecionado]);
 
   const resultadoLiquido = totalFretes - totalDespesas;
 
   /** Agregação por mês ou ano para relatório e gráfico de evolução */
   const desempenhoPorPeriodo = useMemo(() => {
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    let start = startDate ? new Date(startDate) : null;
+    let end = endDate ? new Date(endDate) : null;
+    if (anoSelecionado) {
+      start = new Date(`${anoSelecionado}-01-01`);
+      end = new Date(`${anoSelecionado}-12-31`);
+    }
     if (end) end.setHours(23, 59, 59, 999);
     const inRange = (dateStr: string) => {
       if (!dateStr) return false;
@@ -123,7 +139,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const d = new Date(dateStr);
       return d >= start && d <= end;
     };
-    const inRangeCompetencia = (comp: string) => !start || !end || (comp >= startDate!.slice(0, 7) && comp <= endDate!.slice(0, 7));
+    const compStart = start ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}` : '';
+    const compEnd = end ? `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}` : '';
+    const inRangeCompetencia = (comp: string) => !start || !end || (comp >= compStart && comp <= compEnd);
 
     const meses = new Set<string>();
     const anos = new Set<string>();
@@ -200,7 +218,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     });
 
     return list;
-  }, [fuelings, maintenances, dailyRoutes, routes, tolls, fixedExpenses, agregadoFreights, agrupamento, startDate, endDate]);
+  }, [fuelings, maintenances, dailyRoutes, routes, tolls, fixedExpenses, agregadoFreights, agrupamento, startDate, endDate, anoSelecionado]);
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
@@ -214,7 +232,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       <Card className="bg-slate-900/40 border-slate-800">
         <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Período</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Input label="Data inicial" type="date" value={startDate} onChange={setStartDate} />
           <Input label="Data final" type="date" value={endDate} onChange={setEndDate} />
           <Select
@@ -227,6 +245,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               { label: 'Por ano', value: 'ano' }
             ]}
           />
+          {agrupamento === 'ano' && (
+            <Select
+              label="Selecionar ano"
+              value={anoSelecionado}
+              onChange={setAnoSelecionado}
+              options={opcoesAno}
+            />
+          )}
         </div>
         <p className="text-slate-500 text-[10px] mt-2">Deixe em branco para ver todo o período.</p>
       </Card>
