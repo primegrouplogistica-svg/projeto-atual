@@ -6,6 +6,7 @@ import { Card, Badge, Input, Select, BigButton } from '../components/UI';
 interface UserMgmtProps {
   users: User[];
   onSaveUser: (user: User) => Promise<void>;
+  onDeleteUser: (userId: string) => void;
   onBack: () => void;
 }
 
@@ -58,7 +59,7 @@ const PERMISSION_GROUPS = [
   }
 ];
 
-const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) => {
+const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUser, onBack }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [nome, setNome] = useState('');
@@ -92,6 +93,11 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
   };
 
   const clearAllPermissions = () => setPermissoes([]);
+
+  const handleDelete = (user: User) => {
+    if (!window.confirm(`Excluir o colaborador "${user.nome}"? Esta ação não pode ser desfeita.`)) return;
+    onDeleteUser(user.id);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,6 +235,13 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
                 className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${u.ativo ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40' : 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40'}`}
               >
                 {u.ativo ? 'Desativar' : 'Reativar'}
+              </button>
+              <button
+                onClick={() => handleDelete(u)}
+                className="py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-slate-800 text-slate-400 hover:bg-red-950/40 hover:text-red-400 border border-slate-700 hover:border-red-900"
+                title="Excluir colaborador"
+              >
+                Excluir
               </button>
             </div>
           </Card>

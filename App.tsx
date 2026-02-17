@@ -407,7 +407,7 @@ const App: React.FC = () => {
       case 'admin-pending':
         return <AdminPending fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} vehicles={vehicles} users={users} currentUser={currentUser} onUpdateFueling={(id, up) => updateRecord(setFuelings, id, up)} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} onDeleteFueling={(id) => deleteRecord(setFuelings, id)} onDeleteMaintenance={(id) => deleteRecord(setMaintenances, id)} onDeleteDailyRoute={(id) => deleteRecord(setDailyRoutes, id)} onDeleteRoute={(id) => deleteRecord(setRoutes, id)} onBack={() => navigate('operation')} />;
       case 'user-mgmt':
-        return <UserManagement users={users} onSaveUser={onSaveUser} onBack={() => navigate('operation')} />;
+        return <UserManagement users={users} onSaveUser={onSaveUser} onDeleteUser={(id) => setUsers(prev => prev.filter(u => u.id !== id))} onBack={() => navigate('operation')} />;
       case 'vehicle-mgmt':
         return <VehicleManagement vehicles={vehicles} onSaveVehicle={onSaveVehicle} onUpdateVehicle={(id, up) => updateRecord(setVehicles, id, up)} onBack={() => navigate('operation')} />;
       case 'admin-customers':
