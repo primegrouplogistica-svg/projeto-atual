@@ -1,50 +1,39 @@
-import React from 'react';
 
-interface ErrorBoundaryProps {
-  children: React.ReactNode;
-  onRetry: () => void;
-}
+import { User, UserRole, Vehicle, VehicleStatus, Customer } from './types';
 
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-}
+export const INITIAL_USERS: User[] = [
+  { id: '00000000-0000-0000-0000-000000000001', nome: 'Guilherme', email: 'guilherme@prime.com', senha: 'prime123', perfil: UserRole.ADMIN, ativo: true },
+  { id: '00000000-0000-0000-0000-000000000002', nome: 'Danilo', email: 'danilo@prime.com', senha: 'prime123', perfil: UserRole.ADMIN, ativo: true },
+  { id: '00000000-0000-0000-0000-000000000003', nome: 'João Pinheiro', email: 'joao@prime.com', senha: '123', perfil: UserRole.MOTORISTA, ativo: true },
+  { id: '00000000-0000-0000-0000-000000000004', nome: 'José Clemente', email: 'jose@prime.com', senha: '123', perfil: UserRole.MOTORISTA, ativo: true },
+  { id: '00000000-0000-0000-0000-000000000005', nome: 'Carlos Eduardo', email: 'carlos@prime.com', senha: '123', perfil: UserRole.MOTORISTA, ativo: true },
+  { id: '00000000-0000-0000-0000-000000000006', nome: 'Sérgio Medeiros', email: 'sergio@prime.com', senha: '123', perfil: UserRole.MOTORISTA, ativo: true },
+  { id: '00000000-0000-0000-0000-000000000007', nome: 'André Luiz', email: 'andre@prime.com', senha: '123', perfil: UserRole.MOTORISTA, ativo: true },
+  { id: '00000000-0000-0000-0000-000000000008', nome: 'Renan', email: 'renan@prime.com', senha: '123', perfil: UserRole.AJUDANTE, ativo: true },
+  { id: '00000000-0000-0000-0000-000000000009', nome: 'Junior', email: 'junior@prime.com', senha: '123', perfil: UserRole.AJUDANTE, ativo: true },
+];
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+export const INITIAL_VEHICLES: Vehicle[] = [
+  { id: '11111111-1111-1111-1111-111111111111', placa: 'LQB2B76', modelo: 'Mercedes-Benz Atego', kmAtual: 154200, status: VehicleStatus.RODANDO, proximaManutencaoKm: 160000 },
+  { id: '11111111-1111-1111-1111-111111111112', placa: 'LUX9A15', modelo: 'Volvo FH 540', kmAtual: 89000, status: VehicleStatus.RODANDO, proximaManutencaoKm: 95000 },
+  { id: '11111111-1111-1111-1111-111111111113', placa: 'INZ6I09', modelo: 'Scania R450', kmAtual: 210000, status: VehicleStatus.MANUTENCAO, proximaManutencaoKm: 210500 },
+  { id: '11111111-1111-1111-1111-111111111114', placa: 'KVN8790', modelo: 'Volkswagen Constellation', kmAtual: 125600, status: VehicleStatus.RODANDO, proximaManutencaoKm: 130000 },
+  { id: '11111111-1111-1111-1111-111111111115', placa: 'DLA3I85', modelo: 'Iveco Stralis', kmAtual: 340000, status: VehicleStatus.PARADO, proximaManutencaoKm: 345000 },
+  { id: '11111111-1111-1111-1111-111111111116', placa: 'LNN4760', modelo: 'Ford Cargo', kmAtual: 45000, status: VehicleStatus.RODANDO, proximaManutencaoKm: 50000 },
+  { id: '11111111-1111-1111-1111-111111111117', placa: 'LNX4C34', modelo: 'Mercedes-Benz Axor', kmAtual: 178000, status: VehicleStatus.RODANDO, proximaManutencaoKm: 185000 },
+];
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
-  }
+export const INITIAL_CUSTOMERS: Customer[] = [
+  { id: '22222222-2222-2222-2222-222222222221', nome: 'Frigocopa', ativo: true },
+  { id: '22222222-2222-2222-2222-222222222222', nome: 'King Ouro', ativo: true },
+  { id: '22222222-2222-2222-2222-222222222223', nome: 'Ortobom', ativo: true },
+];
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[Prime] Erro ao renderizar:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center">
-          <div className="bg-slate-900/80 border border-slate-700 rounded-2xl p-8 max-w-md">
-            <p className="text-slate-300 text-sm mb-2">Algo deu errado ao carregar esta tela.</p>
-            <p className="text-slate-500 text-xs mb-6">Seu registro foi salvo. Clique em Voltar para continuar.</p>
-            <button
-              type="button"
-              onClick={() => {
-                this.setState({ hasError: false, error: null });
-                this.props.onRetry();
-              }}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest py-4 px-6 rounded-xl transition-colors"
-            >
-              Voltar ao painel
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+export const APP_THEME = {
+  primary: 'bg-blue-900',
+  secondary: 'bg-slate-900',
+  accent: 'text-blue-400',
+  background: 'bg-slate-950',
+  card: 'bg-slate-900/50',
+  border: 'border-slate-800'
+};

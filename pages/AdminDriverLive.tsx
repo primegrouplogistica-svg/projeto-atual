@@ -46,7 +46,9 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
     <div className="space-y-6 animate-fadeIn max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tight text-white">Localização em tempo real</h2>
+          <h2 className="text-3xl font-black uppercase tracking-tight text-white">
+            Localização em tempo real
+          </h2>
           {isSupabaseConfigured ? (
             <p className="text-slate-500 text-sm mt-1">
               Monitoramento em tempo quase real dos motoristas conectados via app móvel (Supabase).
@@ -54,13 +56,21 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
           ) : (
             <p className="text-amber-400 text-sm mt-1">
               Para ativar o monitoramento em tempo real, configure as variáveis{' '}
-              <code className="px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[11px]">VITE_SUPABASE_URL</code> e{' '}
-              <code className="px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[11px]">VITE_SUPABASE_ANON_KEY</code>{' '}
+              <code className="px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[11px]">
+                VITE_SUPABASE_URL
+              </code>{' '}
+              e{' '}
+              <code className="px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[11px]">
+                VITE_SUPABASE_ANON_KEY
+              </code>{' '}
               no arquivo <span className="font-mono">.env</span> / ambiente do Vite.
             </p>
           )}
         </div>
-        <button onClick={onBack} className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs text-white shrink-0">
+        <button
+          onClick={onBack}
+          className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs text-white shrink-0"
+        >
           Voltar
         </button>
       </div>
@@ -91,7 +101,9 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
           {/* Lista de posições */}
           <Card className="border-slate-800 max-h-[420px] overflow-y-auto scrollbar-thin">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-black text-slate-100 uppercase tracking-widest">Motoristas Localizados</h3>
+              <h3 className="text-sm font-black text-slate-100 uppercase tracking-widest">
+                Motoristas Localizados
+              </h3>
               <Badge status={enrichedLocations.length ? 'aprovado' : 'pendente'}>
                 {enrichedLocations.length ? `${enrichedLocations.length} ativos` : 'Aguardando posições'}
               </Badge>
@@ -101,7 +113,9 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
                 <div
                   key={`${loc.userId}-${loc.updatedAt}`}
                   className={`flex flex-col gap-1 py-2 border-b border-slate-800 last:border-b-0 cursor-pointer rounded ${
-                    selectedLocation && selectedLocation.userId === loc.userId ? 'bg-slate-900/60' : 'hover:bg-slate-900/40'
+                    selectedLocation && selectedLocation.userId === loc.userId
+                      ? 'bg-slate-900/60'
+                      : 'hover:bg-slate-900/40'
                   }`}
                   onClick={() => setSelectedUserId(loc.userId)}
                 >
@@ -145,7 +159,8 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
       ) : (
         <Card className="border-amber-900/40 bg-amber-950/20">
           <p className="text-amber-100 text-sm">
-            Supabase não está configurado. Sem ele, o app não consegue salvar e ler as coordenadas dos motoristas em tempo real.
+            Supabase não está configurado. Sem ele, o app não consegue salvar e ler as coordenadas dos motoristas em
+            tempo real.
           </p>
         </Card>
       )}

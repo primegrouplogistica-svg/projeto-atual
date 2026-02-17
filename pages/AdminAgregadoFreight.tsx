@@ -16,7 +16,6 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const [valorAgregado, setValorAgregado] = useState('');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   const [oc, setOc] = useState('');
-  const [destino, setDestino] = useState('');
 
   // Auto-fill placa when agregado is selected
   useEffect(() => {
@@ -47,7 +46,6 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       valorAgregado: Number(valorAgregado),
       data,
       oc,
-      destino: destino.trim() || undefined,
       createdAt: new Date().toISOString()
     };
 
@@ -103,12 +101,6 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               onChange={setOc} 
               required 
               placeholder="Ex: OC-8855" 
-            />
-            <Input 
-              label="Destino" 
-              value={destino} 
-              onChange={setDestino} 
-              placeholder="Ex: Jundiaí / SP" 
             />
           </div>
 

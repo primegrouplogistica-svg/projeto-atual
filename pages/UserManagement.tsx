@@ -35,7 +35,6 @@ const PERMISSION_GROUPS = [
       { id: 'admin-consolidated-finance', label: 'Faturamento e Lucro Geral' },
       { id: 'admin-vehicle-report', label: 'Desempenho por Veículo' },
       { id: 'admin-agregado-report', label: 'Relatório de Agregados' },
-      { id: 'admin-team-report', label: 'Relatório de Equipe (Pagamentos)' },
       { id: 'admin-activity-report', label: 'Relatório por Colaborador' },
       { id: 'admin-fixed-expenses', label: 'Gestão de Despesas Fixas' },
     ]
@@ -74,12 +73,12 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
   };
 
   const handleEditClick = (user: User) => {
-    setEditingUser(user); 
-    setNome(user.nome); 
-    setEmail(user.email); 
-    setPerfil(user.perfil); 
-    setSenha(user.senha || ''); 
-    setPermissoes(user.permissoes || []); 
+    setEditingUser(user);
+    setNome(user.nome);
+    setEmail(user.email);
+    setPerfil(user.perfil);
+    setSenha(user.senha || '');
+    setPermissoes(user.permissoes || []);
     setShowForm(true);
   };
 
@@ -100,10 +99,10 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
     setIsSaving(true);
     const userToSave: User = {
       id: editingUser?.id || crypto.randomUUID(),
-      nome, 
-      email, 
-      senha, 
-      perfil, 
+      nome,
+      email,
+      senha,
+      perfil,
       ativo: editingUser ? editingUser.ativo : true,
       permissoes: perfil === UserRole.CUSTOM_ADMIN ? permissoes : undefined
     };
@@ -120,8 +119,8 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
           <p className="text-slate-500 text-sm italic">Defina perfis e permissões de acesso</p>
         </div>
         <div className="flex gap-2">
-          <button 
-            onClick={() => setShowForm(!showForm)} 
+          <button
+            onClick={() => setShowForm(!showForm)}
             className={`px-6 py-2 rounded-xl font-bold transition-all shadow-lg ${showForm ? 'bg-red-900/40 text-red-400 border border-red-900/50' : 'bg-blue-700 text-white shadow-blue-900/20'}`}
           >
             {showForm ? 'Cancelar' : '+ Novo Colaborador'}
@@ -136,17 +135,17 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Input label="Nome Completo" value={nome} onChange={setNome} required placeholder="Ex: Marcos Silva" />
               <Input label="E-mail / Login" value={email} onChange={setEmail} placeholder="marcos@prime.com" />
-              <Select 
-                label="Perfil de Acesso" 
-                value={perfil} 
-                onChange={(v) => setPerfil(v as UserRole)} 
+              <Select
+                label="Perfil de Acesso"
+                value={perfil}
+                onChange={(v) => setPerfil(v as UserRole)}
                 options={[
                   { label: 'Admin Total (Master)', value: UserRole.ADMIN },
                   { label: 'Admin Alternativo (Custom)', value: UserRole.CUSTOM_ADMIN },
                   { label: 'Motorista', value: UserRole.MOTORISTA },
                   { label: 'Ajudante', value: UserRole.AJUDANTE },
-                ]} 
-                required 
+                ]}
+                required
               />
               <Input label="Senha de Acesso" type="text" value={senha} onChange={setSenha} required placeholder="Mínimo 3 caracteres" />
             </div>
@@ -168,11 +167,11 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
                       <div className="space-y-2">
                         {group.perms.map(p => (
                           <label key={p.id} className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all ${permissoes.includes(p.id) ? 'bg-blue-900/20 border-blue-900/50 text-blue-400' : 'bg-slate-900/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>
-                            <input 
-                              type="checkbox" 
-                              className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500" 
-                              checked={permissoes.includes(p.id)} 
-                              onChange={() => togglePermission(p.id)} 
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500"
+                              checked={permissoes.includes(p.id)}
+                              onChange={() => togglePermission(p.id)}
                             />
                             <span className="text-[11px] font-bold leading-tight">{p.label}</span>
                           </label>
@@ -203,7 +202,7 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
               </div>
               <Badge status={u.ativo ? 'rodando' : 'rejeitado'}>{u.perfil}</Badge>
             </div>
-            
+
             <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 mb-4 flex justify-between items-center">
               <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">Senha:</span>
               <span className="font-mono text-sm text-slate-300 font-bold tracking-widest">{u.senha}</span>
@@ -225,8 +224,8 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onBack }) 
 
             <div className="flex gap-2">
               <button onClick={() => handleEditClick(u)} className="flex-1 py-2.5 bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Editar</button>
-              <button 
-                onClick={async () => await onSaveUser({...u, ativo: !u.ativo})} 
+              <button
+                onClick={async () => await onSaveUser({...u, ativo: !u.ativo})}
                 className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${u.ativo ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40' : 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40'}`}
               >
                 {u.ativo ? 'Desativar' : 'Reativar'}

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { AgregadoFreight } from '../types';
 import { Card, Input, Select } from '../components/UI';

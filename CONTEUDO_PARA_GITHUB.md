@@ -1,46 +1,27 @@
-========================================
-  O APP NÃO ESTÁ ACESSANDO O BANCO (SUPABASE)
-========================================
+# Conteúdo completo para subir no GitHub
 
-Siga estes passos na ordem:
+Use os links abaixo. Para cada arquivo: abra o link → clique no lápis (Edit) → Ctrl+A → apague → copie o bloco correspondente daqui → cole → Commit changes.
 
-1. CONFERIR SE AS VARIÁVEIS ENTRARAM NO BUILD (Vercel)
-   • No site publicado (URL da Vercel), abra F12 → aba Console.
-   • Se aparecer: "[Prime] Erro ao conectar no Supabase: ..." → anote a mensagem (passo 3).
-   • Se NÃO aparecer nenhum erro e mesmo assim mostra "Local Mode":
-     Pode ser que o build foi feito SEM as variáveis. No Vercel:
-     → Deployments → Redeploy no último deploy.
-     → Espere terminar e teste de novo.
+---
 
-2. CONFERIR SE AS REQUISIÇÕES SAEM PARA O SUPABASE
-   • No site publicado: F12 → aba Rede (Network).
-   • Recarregue a página e filtre por "supabase" ou "jqyurjuknfjrofyjzuwg".
-   • Se NÃO aparecer NENHUMA requisição para supabase.co:
-     O app foi buildado sem VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY.
-     → Vercel: variáveis configuradas + Redeploy.
-   • Se aparecer requisições em vermelho (erro 401, 403, 404, 500):
-     Anote o código e a mensagem (passo 3).
+## LINKS DIRETOS
 
-3. INTERPRETAR O ERRO NO CONSOLE
-   • "relation \"users\" does not exist" (ou outra tabela):
-     As tabelas ainda não foram criadas no Supabase.
-     → No Supabase: Dashboard → SQL Editor.
-     → Execute, NA ORDEM, os arquivos em supabase/migrations:
-       00001_initial_schema.sql
-       00002_daily_routes_avaria.sql
-       00003_fixed_expenses_dia_vencimento.sql
-       00004_driver_locations.sql
-   • Erro 401 (Unauthorized) ou "Invalid API key":
-     A chave no Vercel está errada ou é de outro projeto.
-     → Supabase: Settings → API → copie de novo a "anon public" key.
-     → Vercel: Environment Variables → VITE_SUPABASE_ANON_KEY → cole e salve → Redeploy.
-   • Erro de rede (Failed to fetch, CORS, timeout):
-     Firewall, VPN ou o projeto Supabase pausado.
-     → No Supabase Dashboard confira se o projeto está ativo.
+- **App.tsx (raiz):** https://github.com/primegrouplogistica-svg/projeto-atual/blob/main/App.tsx
+- **OperationHome.tsx:** https://github.com/primegrouplogistica-svg/projeto-atual/blob/main/pages/OperationHome.tsx
+- **DriverDailyRoute.tsx:** https://github.com/primegrouplogistica-svg/projeto-atual/blob/main/pages/DriverDailyRoute.tsx
+- **FuelingForm.tsx:** https://github.com/primegrouplogistica-svg/projeto-atual/blob/main/pages/FuelingForm.tsx
+- **RouteForm.tsx:** https://github.com/primegrouplogistica-svg/projeto-atual/blob/main/pages/RouteForm.tsx
 
-4. RESUMO
-   • Variáveis no Vercel + Redeploy para o build ter URL e chave.
-   • Migrations rodadas no Supabase (SQL Editor) para as tabelas existirem.
-   • Console e Rede (F12) para ver o erro exato.
+---
 
-========================================
+## OPÇÃO MAIS FÁCIL: ARRASTAR DO PC
+
+1. **Raiz do repo:** https://github.com/primegrouplogistica-svg/projeto-atual  
+   → Arraste o arquivo **App.tsx** da pasta raiz do seu projeto para essa tela.
+
+2. **Pasta pages:** https://github.com/primegrouplogistica-svg/projeto-atual/tree/main/pages  
+   → Arraste **todos** os arquivos da pasta **pages** do seu projeto (Ctrl+A na pasta pages, arrastar para essa tela).
+
+3. Em cada vez: mensagem do commit (ex.: "atualização") → Commit changes.
+
+Assim você sobe tudo de uma vez sem copiar/colar. Os arquivos na sua pasta do computador já estão corretos (App.tsx na raiz; DriverDailyRoute, FuelingForm, RouteForm, OperationHome, etc. na pasta pages).

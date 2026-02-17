@@ -226,7 +226,6 @@ const OperationHome: React.FC<OperationHomeProps> = ({
               {hasPermission('admin-consolidated-finance') && <BigButton onClick={() => onNavigate('admin-consolidated-finance')} icon={<Wallet size={32} />} variant="success">Faturamento</BigButton>}
               {hasPermission('admin-vehicle-report') && <BigButton onClick={() => onNavigate('admin-vehicle-report')} icon={<BarChart3 size={32} />} variant="secondary">Desempenho</BigButton>}
               {hasPermission('admin-agregado-report') && <BigButton onClick={() => onNavigate('admin-agregado-report')} icon={<LineChart size={32} />} variant="secondary">Agregados</BigButton>}
-              {hasPermission('admin-team-report') && <BigButton onClick={() => onNavigate('admin-team-report')} icon={<Users size={32} />} variant="secondary">Equipe</BigButton>}
               {hasPermission('admin-fixed-expenses') && <BigButton onClick={() => onNavigate('admin-fixed-expenses')} icon={<LineChart size={32} />} variant="secondary">Custos Fixos</BigButton>}
 
               {/* CATEGORIA 4: MANUTENÇÃO E FROTA */}
