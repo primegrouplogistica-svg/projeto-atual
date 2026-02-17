@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { User, Vehicle, DailyRoute, UserRole, Customer, FinanceiroStatus } from '../types';
 import { Card, Input, Select, BigButton } from '../components/UI';
@@ -26,14 +25,13 @@ const AdminCreateDailyRoute: React.FC<AdminCreateDailyRouteProps> = ({ users, ve
   const drivers = useMemo(() => users.filter(u => u.perfil === UserRole.MOTORISTA && u.ativo), [users]);
   const helpers = useMemo(() => users.filter(u => u.perfil === UserRole.AJUDANTE && u.ativo), [users]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     if (!motoristaId || !vehicleId || !clienteId || !destino || !oc || !selectedDate) return;
 
     const selectedVehicle = vehicles.find(v => v.id === vehicleId);
     const selectedCustomer = customers.find(c => c.id === clienteId);
     const selectedHelper = helpers.find(h => h.id === ajudanteId);
-    
+
     if (!selectedVehicle) return;
 
     const now = new Date();
@@ -61,6 +59,9 @@ const AdminCreateDailyRoute: React.FC<AdminCreateDailyRouteProps> = ({ users, ve
     onSubmit(newDailyRoute);
   };
 
+  const disabled =
+    !motoristaId || !vehicleId || !clienteId || !destino || !oc || !selectedDate;
+
   return (
     <div className="max-w-3xl mx-auto py-4 animate-fadeIn">
       <div className="flex items-center justify-between mb-8">
@@ -68,39 +69,42 @@ const AdminCreateDailyRoute: React.FC<AdminCreateDailyRouteProps> = ({ users, ve
           <h2 className="text-3xl font-bold tracking-tight">Lançar Rota Manual</h2>
           <p className="text-slate-500 text-sm">Vincule a equipe, veículo e destino</p>
         </div>
-        <button onClick={onBack} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl font-bold border border-slate-700 transition-colors">
+        <button
+          onClick={onBack}
+          className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl font-bold border border-slate-700 transition-colors"
+        >
           Voltar
         </button>
       </div>
 
       <Card className="border-indigo-900/30 bg-slate-900/60">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select 
-              label="1. Selecionar Motorista" 
-              value={motoristaId} 
-              onChange={setMotoristaId} 
+            <Select
+              label="1. Selecionar Motorista"
+              value={motoristaId}
+              onChange={setMotoristaId}
               options={drivers.map(u => ({ label: u.nome, value: u.id }))}
-              required 
+              required
             />
-            <Select 
-              label="2. Selecionar Ajudante (Opcional)" 
-              value={ajudanteId} 
-              onChange={setAjudanteId} 
+            <Select
+              label="2. Selecionar Ajudante (Opcional)"
+              value={ajudanteId}
+              onChange={setAjudanteId}
               options={helpers.map(u => ({ label: u.nome, value: u.id }))}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select 
-              label="3. Selecionar Veículo (Placa)" 
-              value={vehicleId} 
-              onChange={setVehicleId} 
+            <Select
+              label="3. Selecionar Veículo (Placa)"
+              value={vehicleId}
+              onChange={setVehicleId}
               options={vehicles.map(v => ({ label: `${v.placa} - ${v.modelo}`, value: v.id }))}
-              required 
+              required
             />
-            <Input 
-              label="Data da Operação" 
+            <Input
+              label="Data da Operação"
               type="date"
               value={selectedDate}
               onChange={setSelectedDate}
@@ -109,24 +113,26 @@ const AdminCreateDailyRoute: React.FC<AdminCreateDailyRouteProps> = ({ users, ve
           </div>
 
           <div className="border-t border-slate-800 pt-6 space-y-4">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Informações Financeiras</h3>
+            <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-4">
+              Informações Financeiras
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input 
-                label="Valor do Frete (Bruto)" 
+              <Input
+                label="Valor do Frete (Bruto)"
                 type="number"
                 value={valorFrete}
                 onChange={setValorFrete}
                 placeholder="0.00"
               />
-              <Input 
-                label="Valor Motorista" 
+              <Input
+                label="Valor Motorista"
                 type="number"
                 value={valorMotorista}
                 onChange={setValorMotorista}
                 placeholder="0.00"
               />
-              <Input 
-                label="Valor Ajudante" 
+              <Input
+                label="Valor Ajudante"
                 type="number"
                 value={valorAjudante}
                 onChange={setValorAjudante}
@@ -136,29 +142,31 @@ const AdminCreateDailyRoute: React.FC<AdminCreateDailyRouteProps> = ({ users, ve
           </div>
 
           <div className="border-t border-slate-800 pt-6 space-y-4">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Informações da Rota</h3>
+            <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-4">
+              Informações da Rota
+            </h3>
             <div className="grid grid-cols-1 gap-4">
-              <Select 
-                label="CLIENTE" 
-                value={clienteId} 
-                onChange={setClienteId} 
+              <Select
+                label="CLIENTE"
+                value={clienteId}
+                onChange={setClienteId}
                 options={customers.filter(c => c.ativo).map(c => ({ label: c.nome, value: c.id }))}
-                required 
+                required
               />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input 
-                  label="DESTINO PRINCIPAL" 
-                  value={destino} 
-                  onChange={setDestino} 
-                  required 
-                  placeholder="Ex: Jundiaí / SP" 
+                <Input
+                  label="DESTINO PRINCIPAL"
+                  value={destino}
+                  onChange={setDestino}
+                  required
+                  placeholder="Ex: Jundiaí / SP"
                 />
-                <Input 
-                  label="OC (Ordem de Carga)" 
-                  value={oc} 
-                  onChange={setOc} 
-                  required 
-                  placeholder="Ex: OC-9988" 
+                <Input
+                  label="OC (Ordem de Carga)"
+                  value={oc}
+                  onChange={setOc}
+                  required
+                  placeholder="Ex: OC-9988"
                 />
               </div>
             </div>
@@ -167,18 +175,20 @@ const AdminCreateDailyRoute: React.FC<AdminCreateDailyRouteProps> = ({ users, ve
           <div className="p-4 bg-indigo-950/20 border border-indigo-900/30 rounded-xl flex items-start gap-3">
             <span className="text-xl">💰</span>
             <div className="text-xs text-indigo-300 leading-relaxed">
-              <strong>Gestão de Custos:</strong> Defina o faturamento bruto (Frete) e as despesas diretas com a equipe (Motorista e Ajudante) para este carregamento.
+              <strong>Gestão de Custos:</strong> Defina o faturamento bruto (Frete) e as despesas diretas com a equipe
+              (Motorista e Ajudante) para este carregamento.
             </div>
           </div>
 
-          <BigButton 
-            onClick={() => {}} 
-            variant="primary" 
-            disabled={!motoristaId || !vehicleId || !clienteId || !destino || !oc || !selectedDate}
+          <BigButton
+            type="button"
+            onClick={handleSubmit}
+            variant="primary"
+            disabled={disabled}
           >
             CONFIRMAR LANÇAMENTO
           </BigButton>
-        </form>
+        </div>
       </Card>
     </div>
   );
