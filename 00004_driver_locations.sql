@@ -231,16 +231,15 @@ export function mapDailyRouteToDb(r: any) {
     status_financeiro: r.statusFinanceiro ?? null,
     admin_financeiro_id: r.adminFinanceiroId ?? null,
     created_at: r.createdAt,
-    // não enviamos as fotos (base64) para o Supabase para evitar registros gigantes
-    foto_frente: null,
-    foto_lateral_esquerda: null,
-    foto_lateral_direita: null,
-    foto_traseira: null,
+    foto_frente: r.fotoFrente ?? null,
+    foto_lateral_esquerda: r.fotoLateralEsquerda ?? null,
+    foto_lateral_direita: r.fotoLateralDireita ?? null,
+    foto_traseira: r.fotoTraseira ?? null,
     nivel_oleo: r.nivelOleo ?? null,
     nivel_agua: r.nivelAgua ?? null,
     avaria_nova: r.avariaNova === true ? true : null,
     avaria_descricao: r.avariaDescricao ?? null,
-    avaria_foto: null
+    avaria_foto: r.avariaFoto ?? null
   };
 }
 

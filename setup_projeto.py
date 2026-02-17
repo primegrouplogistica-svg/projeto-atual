@@ -1,139 +1,170 @@
 
-import os
+import React, { useState } from 'react';
+import { Vehicle, VehicleStatus } from '../types';
+import { Card, Badge, Input } from '../components/UI';
+import { Pencil, X, Check } from 'lucide-react';
 
-# Dicionário com todos os arquivos do projeto PRIME GROUP
-files = {
-    "package.json": """{
-  "name": "prime-group-gestao",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "recharts": "^2.12.7",
-    "lucide-react": "^0.378.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.2.2",
-    "vite": "^5.3.1",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4"
-  }
-}""",
-    "vite.config.ts": """import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-export default defineConfig({ 
-  plugins: [react()],
-  server: { port: 5173, host: true }
-});""",
-    "tsconfig.json": """{
-  "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "Node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "strict": false
-  },
-  "include": ["**/*.ts", "**/*.tsx"]
-}""",
-    "index.html": """<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRIME GROUP - Gestão Operacional</title>
-    <meta name="theme-color" content="#020617">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-        @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .animate-slideDown { animation: slideDown 0.3s ease-out; }
-        @media print { .no-print { display: none !important; } body { background: white; color: black; } }
-    </style>
-</head>
-<body class="antialiased">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-</body>
-</html>""",
-    "index.tsx": """import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(<React.StrictMode><App /></React.StrictMode>);
-}""",
-    "types.ts": """export enum UserRole { ADMIN = 'admin', CUSTOM_ADMIN = 'custom_admin', MOTORISTA = 'motorista', AJUDANTE = 'ajudante' }
-export enum VehicleStatus { RODANDO = 'rodando', MANUTENCAO = 'manutencao', PARADO = 'parado' }
-export enum FuelingStatus { PENDENTE = 'pendente', APROVADO = 'aprovado', REJEITADO = 'rejeitado' }
-export enum MaintenanceStatus { PENDENTE = 'pendente', ASSUMIDA = 'assumida', EM_EXECUCAO = 'em_execucao', FEITA = 'feita', REPROVADA = 'reprovada' }
-export enum RouteStatus { EM_ROTA = 'em_rota', FINALIZADA = 'finalizada', CANCELADA = 'cancelada' }
-export enum FinanceiroStatus { PENDENTE = 'pendente', APROVADO = 'aprovado' }
-
-export interface User { id: string; nome: string; email: string; senha?: string; perfil: UserRole; ativo: boolean; permissoes?: string[]; }
-export interface Customer { id: string; nome: string; cnpj?: string; ativo: boolean; }
-export interface Agregado { id: string; nome: string; placa: string; ativo: boolean; }
-export interface FixedExpense { id: string; categoria: 'funcionario' | 'contador' | 'manobra' | 'sistema' | 'imposto' | 'outros'; descricao: string; valor: number; dataCompetencia: string; createdAt: string; }
-export interface AgregadoFreight { id: string; agregadoId: string; nomeAgregado: string; placa: string; valorFrete: number; valorAgregado: number; oc: string; data: string; createdAt: string; }
-export interface PreventiveTask { id: string; descricao: string; kmAlvo: number; dataProgramada?: string; }
-export interface Vehicle { id: string; placa: string; modelo: string; kmAtual: number; status: VehicleStatus; preventiveTasks?: PreventiveTask[]; proximaManutencaoKm?: number; trackerId?: string; isOnline?: boolean; }
-export interface UserSession { userId: string; vehicleId: string; placa: string; updatedAt: string; }
-export interface DailyRoute { id: string; motoristaId: string; ajudanteId?: string; ajudanteNome?: string; vehicleId: string; placa: string; clienteId: string; clienteNome?: string; destino: string; oc: string; valorFrete?: number; valorMotorista?: number; valorAjudante?: number; statusFinanceiro?: FinanceiroStatus; adminFinanceiroId?: string; createdAt: string; fotoFrente?: string; fotoLateralEsquerda?: string; fotoLateralDireita?: string; fotoTraseira?: string; nivelOleo?: 'no_nivel' | 'abaixo_do_nivel'; nivelAgua?: 'no_nivel' | 'abaixo_do_nivel'; }
-export interface Fueling { id: string; vehicleId: string; placa: string; motoristaId: string; kmNoMomento: number; valor: number; fotoNota: string; status: FuelingStatus; motivoRejeicao?: string; adminAprovadorId?: string; createdAt: string; approvedAt?: string; }
-export interface MaintenanceRequest { id: string; vehicleId: string; placa: string; motoristaId: string; tipo: 'preventiva' | 'corretiva'; descricao: string; kmNoMomento: number; foto: string; status: MaintenanceStatus; adminResponsavelId?: string; assumedAt?: string; startedAt?: string; doneAt?: string; oficina?: string; valor?: number; notaFoto?: string; observacaoAdmin?: string; createdAt: string; }
-export interface RouteDeparture { id: string; vehicleId: string; placa: string; motoristaId: string; ajudanteId: string; ajudanteNome?: string; clienteId: string; clienteNome?: string; destino: string; oc: string; valorFrete?: number; valorMotorista?: number; valorAjudante?: number; statusFinanceiro?: FinanceiroStatus; adminFinanceiroId?: string; observacao?: string; status: RouteStatus; createdAt: string; finishedAt?: string; }
-export interface Toll { id: string; vehicleId: string; placa: string; valor: number; data: string; createdAt: string; }""",
-    "supabase.ts": """export const supabase = {
-  from: () => ({
-    select: () => Promise.resolve({ data: [], error: null }),
-    insert: () => Promise.resolve({ error: null }),
-    update: () => ({ eq: () => Promise.resolve({ error: null }) }),
-  })
-} as any;
-export const mapFromDb = (item: any) => item;
-export const mapToDb = (item: any) => item;""",
-    "LEAME.md": """# PRIME GROUP - Gestão Operacional
-
-Este projeto está em modo **Offline** (salva no LocalStorage do navegador).
-
-## Como rodar:
-1. Instale o Node.js.
-2. No terminal: `npm install`
-3. Depois: `npm run dev`
-4. Acesse: `http://localhost:5173`
-"""
+interface VehicleMgmtProps {
+  vehicles: Vehicle[];
+  onSaveVehicle: (v: Vehicle) => Promise<void>;
+  onUpdateVehicle: (id: string, update: Partial<Vehicle>) => void;
+  onBack: () => void;
 }
 
-def create_structure():
-    print("🚀 Reconstruindo projeto PRIME GROUP...")
-    for path, content in files.items():
-        folder = os.path.dirname(path)
-        if folder and not os.path.exists(folder):
-            os.makedirs(folder)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(content)
-        print(f"✅ Arquivo: {path}")
-    print("\n🎉 Tudo pronto! Agora rode 'npm install' e 'npm run dev'.")
+const VehicleManagement: React.FC<VehicleMgmtProps> = ({ vehicles, onSaveVehicle, onUpdateVehicle, onBack }) => {
+  const [showForm, setShowForm] = useState(false);
+  const [placa, setPlaca] = useState('');
+  const [modelo, setModelo] = useState('');
+  const [km, setKm] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPlaca, setEditPlaca] = useState('');
+  const [editModelo, setEditModelo] = useState('');
+  const [editStatus, setEditStatus] = useState<VehicleStatus>(VehicleStatus.RODANDO);
 
-if __name__ == "__main__":
-    create_structure()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!placa || !modelo) return alert('Placa e Modelo são obrigatórios');
+    setIsSaving(true);
+    const newVehicle: Vehicle = {
+      id: crypto.randomUUID(),
+      placa: placa.toUpperCase(),
+      modelo,
+      kmAtual: Number(km) || 0,
+      status: VehicleStatus.RODANDO,
+      proximaManutencaoKm: (Number(km) || 0) + 10000
+    };
+    await onSaveVehicle(newVehicle);
+    setIsSaving(false);
+    setShowForm(false);
+    setPlaca(''); setModelo(''); setKm('');
+  };
+
+  const startEdit = (v: Vehicle) => {
+    setEditingId(v.id);
+    setEditPlaca(v.placa);
+    setEditModelo(v.modelo);
+    setEditStatus(v.status);
+  };
+
+  const saveEdit = (id: string) => {
+    const placaTrim = editPlaca.trim().toUpperCase();
+    const modeloTrim = editModelo.trim();
+    if (!placaTrim || !modeloTrim) return alert('Placa e Modelo são obrigatórios');
+    onUpdateVehicle(id, { placa: placaTrim, modelo: modeloTrim, status: editStatus });
+    setEditingId(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditPlaca('');
+    setEditModelo('');
+  };
+
+  const statusOptions: { value: VehicleStatus; label: string }[] = [
+    { value: VehicleStatus.RODANDO, label: 'Rodando' },
+    { value: VehicleStatus.MANUTENCAO, label: 'Em manutenção' },
+    { value: VehicleStatus.PARADO, label: 'Parado' },
+  ];
+  const getStatusLabel = (s: VehicleStatus) => statusOptions.find(o => o.value === s)?.label ?? s;
+
+  return (
+    <div className="space-y-6 animate-fadeIn">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold">Gestão da Frota</h2>
+        <div className="flex gap-2">
+          <button onClick={() => setShowForm(!showForm)} className="bg-blue-700 text-white px-4 py-2 rounded-lg font-bold">
+            {showForm ? 'Cancelar' : '+ Novo Veículo'}
+          </button>
+          <button onClick={onBack} className="bg-slate-800 px-4 py-2 rounded-lg font-bold text-sm">Voltar</button>
+        </div>
+      </div>
+
+      {showForm && (
+        <Card className="border-blue-900/50">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <Input label="Placa" value={placa} onChange={setPlaca} required placeholder="ABC-1234" />
+            <Input label="Modelo" value={modelo} onChange={setModelo} required />
+            <Input label="KM Inicial" type="number" value={km} onChange={setKm} />
+            <div className="md:col-span-3">
+              <button type="submit" disabled={isSaving} className="w-full p-6 rounded-2xl border-b-4 border-emerald-600 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white font-black uppercase tracking-widest transition-all">
+                CADASTRAR
+              </button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {vehicles.map(v => (
+          <Card key={v.id} className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+            {editingId === v.id ? (
+              <div className="flex-1 space-y-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Placa</label>
+                  <input
+                    type="text"
+                    value={editPlaca}
+                    onChange={(e) => setEditPlaca(e.target.value)}
+                    placeholder="ABC-1234"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-white uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Modelo</label>
+                  <input
+                    type="text"
+                    value={editModelo}
+                    onChange={(e) => setEditModelo(e.target.value)}
+                    placeholder="Modelo do veículo"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Status</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as VehicleStatus)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                  >
+                    {statusOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => saveEdit(v.id)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold uppercase">
+                    <Check size={14} /> Salvar
+                  </button>
+                  <button onClick={cancelEdit} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold uppercase">
+                    <X size={14} /> Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <div className="font-mono font-black text-xl text-blue-400">{v.placa}</div>
+                  <div className="text-sm font-bold text-slate-100">{v.modelo}</div>
+                  <div className="text-[10px] text-slate-500 uppercase">KM: {v.kmAtual.toLocaleString()}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge status={v.status}>{getStatusLabel(v.status)}</Badge>
+                  <button
+                    onClick={() => startEdit(v)}
+                    className="p-2 rounded-lg text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                    title="Editar placa e modelo"
+                  >
+                    <Pencil size={18} />
+                  </button>
+                </div>
+              </>
+            )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default VehicleManagement;
