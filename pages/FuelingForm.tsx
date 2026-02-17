@@ -46,8 +46,23 @@ const FuelingForm: React.FC<FuelingFormProps> = ({ session, user, onSubmit, onBa
             <span className="font-mono text-lg text-blue-400 font-bold">{session.placa}</span>
           </div>
 
-          <Input label="KM no Momento" type="number" value={km} onChange={setKm} required placeholder="KM atual no painel" />
-          <Input label="Valor Total (R$)" type="number" value={valor} onChange={setValor} required placeholder="Valor da nota" />
+          <Input
+            label="KM no Momento"
+            type="number"
+            value={km}
+            onChange={setKm}
+            required
+            placeholder="KM atual no painel"
+          />
+
+          <Input
+            label="Valor Total (R$)"
+            type="number"
+            value={valor}
+            onChange={setValor}
+            required
+            placeholder="Valor da nota"
+          />
 
           <BigButton
             type="button"
