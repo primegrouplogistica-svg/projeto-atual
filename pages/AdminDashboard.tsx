@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Fueling, MaintenanceRequest, Vehicle, FuelingStatus, FixedExpense, DailyRoute, RouteDeparture, AgregadoFreight, FinanceiroStatus, Toll, MaintenanceStatus } from '../types';
-import { Card } from '../components/UI';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Card, Input, Select } from '../components/UI';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Activity, Truck, CreditCard, Package } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -41,6 +41,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [agrupamento, setAgrupamento] = useState<'periodo' | 'mes' | 'ano'>('periodo');
 
   const { receitaFretes, receitaAgregados, totalFretes, totalDespesas, despesasPorCategoria } = useMemo(() => {
     const safeNum = (val: any): number => {
@@ -111,6 +112,96 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const resultadoLiquido = totalFretes - totalDespesas;
 
+  /** Agregação por mês ou ano para relatório e gráfico de evolução */
+  const desempenhoPorPeriodo = useMemo(() => {
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    if (end) end.setHours(23, 59, 59, 999);
+    const inRange = (dateStr: string) => {
+      if (!dateStr) return false;
+      if (!start || !end) return true;
+      const d = new Date(dateStr);
+      return d >= start && d <= end;
+    };
+    const inRangeCompetencia = (comp: string) => !start || !end || (comp >= startDate!.slice(0, 7) && comp <= endDate!.slice(0, 7));
+
+    const meses = new Set<string>();
+    const anos = new Set<string>();
+    const addPeriodo = (dateStr: string) => {
+      if (!dateStr || !inRange(dateStr)) return;
+      const d = new Date(dateStr);
+      meses.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+      anos.add(String(d.getFullYear()));
+    };
+    const addPeriodoCompetencia = (comp: string) => {
+      if (!comp || !inRangeCompetencia(comp)) return;
+      meses.add(comp);
+      anos.add(comp.slice(0, 4));
+    };
+
+    dailyRoutes.forEach(x => addPeriodo(x.createdAt));
+    routes.forEach(x => addPeriodo(x.createdAt));
+    fuelings.forEach(x => addPeriodo(x.createdAt));
+    maintenances.forEach(x => addPeriodo(x.createdAt));
+    tolls.forEach(x => addPeriodo(x.data));
+    agregadoFreights.forEach(x => addPeriodo(x.data));
+    fixedExpenses.forEach(x => addPeriodoCompetencia(x.dataCompetencia));
+
+    const safeNum = (v: unknown) => { const n = Number(v); return isNaN(n) ? 0 : n; };
+    const list: { periodo: string; label: string; frete: number; despesas: number; lucro: number }[] = [];
+
+    const periodos = agrupamento === 'ano' ? Array.from(anos).sort() : Array.from(meses).sort();
+
+    periodos.forEach(p => {
+      const isAno = agrupamento === 'ano';
+      const filterByPeriodo = (dateStr: string) => {
+        if (!dateStr || !inRange(dateStr)) return false;
+        const d = new Date(dateStr);
+        if (isAno) return String(d.getFullYear()) === p;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === p;
+      };
+      const filterByCompetencia = (comp: string) => inRangeCompetencia(comp) && (isAno ? comp?.startsWith(p) : comp === p);
+
+      const dailyF = dailyRoutes.filter(x => filterByPeriodo(x.createdAt));
+      const routesF = routes.filter(x => filterByPeriodo(x.createdAt));
+      const fuelingsF = fuelings.filter(x => filterByPeriodo(x.createdAt));
+      const maintenancesF = maintenances.filter(x => filterByPeriodo(x.createdAt));
+      const tollsF = tolls.filter(x => filterByPeriodo(x.data));
+      const agregadoF = agregadoFreights.filter(x => filterByPeriodo(x.data));
+      const feFiltered = fixedExpenses.filter(x => filterByCompetencia(x.dataCompetencia));
+
+      const despesaFixaOnly = feFiltered.filter(e => !isDespesaParcelada(e)).reduce((s, e) => s + safeNum(e.valor), 0);
+      const despesaParcelada = feFiltered.filter(e => isDespesaParcelada(e)).reduce((s, e) => s + safeNum(e.valor), 0);
+      const combustivel = fuelingsF.filter(f => f.status === FuelingStatus.APROVADO).reduce((s, f) => s + safeNum(f.valor), 0);
+      const manutencao = maintenancesF.filter(m => m.status === MaintenanceStatus.FEITA).reduce((s, m) => s + safeNum(m.valor), 0);
+      const pedagio = tollsF.reduce((s, t) => s + safeNum(t.valor), 0);
+      const routesAprovadas = routesF.filter(r => r.statusFinanceiro === FinanceiroStatus.APROVADO);
+      const dailyAprovadas = dailyF.filter(r => r.statusFinanceiro === FinanceiroStatus.APROVADO);
+      const equipe = routesAprovadas.reduce((s, r) => s + safeNum(r.valorMotorista) + safeNum(r.valorAjudante), 0) +
+        dailyAprovadas.reduce((s, r) => s + safeNum(r.valorMotorista) + safeNum(r.valorAjudante), 0);
+      const agregadoPai = agregadoF.reduce((s, r) => s + safeNum(r.valorAgregado), 0);
+
+      const frete = dailyAprovadas.reduce((s, r) => s + safeNum(r.valorFrete), 0) + routesAprovadas.reduce((s, r) => s + safeNum(r.valorFrete), 0);
+      const receitaAgreg = agregadoF.reduce((s, r) => s + safeNum(r.valorFrete), 0);
+      const totalReceita = frete + receitaAgreg;
+      const despesas = combustivel + manutencao + pedagio + equipe + despesaFixaOnly + despesaParcelada + agregadoPai;
+      const lucro = totalReceita - despesas;
+
+      const [y, mm] = isAno ? [p, ''] : p.split('-');
+      const label = isAno ? p : `${mm}/${y}`;
+
+      list.push({
+        periodo: p,
+        label,
+        frete: Math.round(totalReceita * 100) / 100,
+        despesas: Math.round(despesas * 100) / 100,
+        lucro: Math.round(lucro * 100) / 100
+      });
+    });
+
+    return list;
+  }, [fuelings, maintenances, dailyRoutes, routes, tolls, fixedExpenses, agregadoFreights, agrupamento, startDate, endDate]);
+
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -123,28 +214,82 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       <Card className="bg-slate-900/40 border-slate-800">
         <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Período</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Data inicial</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Data final</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm"
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Input label="Data inicial" type="date" value={startDate} onChange={setStartDate} />
+          <Input label="Data final" type="date" value={endDate} onChange={setEndDate} />
+          <Select
+            label="Agrupar relatório por"
+            value={agrupamento}
+            onChange={(v) => setAgrupamento(v as 'periodo' | 'mes' | 'ano')}
+            options={[
+              { label: 'Período selecionado', value: 'periodo' },
+              { label: 'Por mês', value: 'mes' },
+              { label: 'Por ano', value: 'ano' }
+            ]}
+          />
         </div>
         <p className="text-slate-500 text-[10px] mt-2">Deixe em branco para ver todo o período.</p>
       </Card>
+
+      {(agrupamento === 'mes' || agrupamento === 'ano') && (
+        <>
+          <Card className="border-indigo-900/40 bg-indigo-950/10">
+            <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-indigo-400">Desempenho por {agrupamento === 'ano' ? 'ano' : 'mês'}</h3>
+            {desempenhoPorPeriodo.length > 0 ? (
+              <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={desempenhoPorPeriodo} margin={{ top: 10, right: 20, left: 10, bottom: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} stroke="#64748b" />
+                    <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} stroke="#64748b" tickFormatter={(v) => `R$ ${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
+                      formatter={(value: number, name: string) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, (name === 'frete' ? 'Receita' : name === 'despesas' ? 'Despesas' : 'Lucro')]}
+                      labelFormatter={(label) => `${agrupamento === 'ano' ? 'Ano' : 'Mês'}: ${label}`}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <Line type="monotone" dataKey="frete" name="Receita" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="despesas" name="Despesas" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="lucro" name="Lucro" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Nenhum dado no período.</div>
+            )}
+          </Card>
+
+          <Card className="border-slate-800 overflow-hidden">
+            <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-white">Relatório por {agrupamento === 'ano' ? 'ano' : 'mês'}</h3>
+            {desempenhoPorPeriodo.length > 0 ? (
+              <div className="overflow-x-auto rounded-xl border border-slate-800">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                    <tr>
+                      <th className="p-3">{agrupamento === 'ano' ? 'Ano' : 'Mês/Ano'}</th>
+                      <th className="p-3 text-right">Receita Total</th>
+                      <th className="p-3 text-right">Despesas</th>
+                      <th className="p-3 text-right">Lucro Líquido</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {desempenhoPorPeriodo.map((row, i) => (
+                      <tr key={i} className="border-t border-slate-800 hover:bg-slate-800/50">
+                        <td className="p-3 font-bold text-slate-200">{row.label}</td>
+                        <td className="p-3 text-right text-emerald-400">R$ {row.frete.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td className="p-3 text-right text-red-400">R$ {row.despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td className={`p-3 text-right font-black ${row.lucro >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>R$ {row.lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-slate-500 text-sm py-4 text-center">Nenhum dado no período.</p>
+            )}
+          </Card>
+        </>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card className="bg-emerald-900/10 border-emerald-900/40 relative overflow-hidden">

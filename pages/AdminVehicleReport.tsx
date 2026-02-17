@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Fueling, MaintenanceRequest, Vehicle, FuelingStatus, DailyRoute, RouteDeparture, MaintenanceStatus, Toll, FixedExpense, FinanceiroStatus } from '../types';
 import { Card, Badge, Input, Select } from '../components/UI';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
 interface AdminVehicleReportProps {
   fuelings: Fueling[];
@@ -29,6 +29,7 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
 }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [agrupamento, setAgrupamento] = useState<'periodo' | 'mes' | 'ano'>('periodo');
 
   const dateFilteredData = useMemo(() => {
     const start = startDate ? new Date(startDate) : null;
@@ -116,6 +117,86 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
     custoManutencao: Math.round(s.gastoManutencao * 100) / 100,
   })), [vehicleStats]);
 
+  /** Agregação por mês ou ano para relatório e gráfico de evolução */
+  const desempenhoPorPeriodo = useMemo(() => {
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    if (end) end.setHours(23, 59, 59, 999);
+    const inRange = (dateStr: string) => {
+      if (!dateStr) return false;
+      if (!start || !end) return true;
+      const d = new Date(dateStr);
+      return d >= start && d <= end;
+    };
+    const inRangeCompetencia = (comp: string) => !start || !end || (comp >= startDate!.slice(0, 7) && comp <= endDate!.slice(0, 7));
+
+    const meses = new Set<string>();
+    const anos = new Set<string>();
+    const addPeriodo = (dateStr: string) => {
+      if (!dateStr || !inRange(dateStr)) return;
+      const d = new Date(dateStr);
+      meses.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+      anos.add(String(d.getFullYear()));
+    };
+    const addPeriodoCompetencia = (comp: string) => {
+      if (!comp || !inRangeCompetencia(comp)) return;
+      meses.add(comp);
+      anos.add(comp.slice(0, 4));
+    };
+    fuelings.forEach(x => addPeriodo(x.createdAt));
+    maintenances.forEach(x => addPeriodo(x.createdAt));
+    dailyRoutes.forEach(x => addPeriodo(x.createdAt));
+    routes.forEach(x => addPeriodo(x.createdAt));
+    tolls.forEach(x => addPeriodo(x.data));
+    fixedExpenses.forEach(x => addPeriodoCompetencia(x.dataCompetencia));
+
+    const safeNum = (v: unknown) => { const n = Number(v); return isNaN(n) ? 0 : n; };
+    const list: { periodo: string; label: string; frete: number; custos: number; despesasFixas: number; lucro: number }[] = [];
+
+    const periodos = agrupamento === 'ano' ? Array.from(anos).sort() : Array.from(meses).sort();
+
+    periodos.forEach(p => {
+      const isAno = agrupamento === 'ano';
+      const filterByPeriodo = (dateStr: string) => {
+        if (!dateStr || !inRange(dateStr)) return false;
+        const d = new Date(dateStr);
+        if (isAno) return String(d.getFullYear()) === p;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === p;
+      };
+      const filterByCompetencia = (comp: string) => inRangeCompetencia(comp) && (isAno ? comp?.startsWith(p) : comp === p);
+
+      const f = fuelings.filter(x => filterByPeriodo(x.createdAt) && x.status === FuelingStatus.APROVADO);
+      const m = maintenances.filter(x => filterByPeriodo(x.createdAt) && x.status === MaintenanceStatus.FEITA);
+      const dr = dailyRoutes.filter(x => filterByPeriodo(x.createdAt) && x.statusFinanceiro === FinanceiroStatus.APROVADO);
+      const r = routes.filter(x => filterByPeriodo(x.createdAt) && x.statusFinanceiro === FinanceiroStatus.APROVADO);
+      const t = tolls.filter(x => filterByPeriodo(x.data));
+      const fe = fixedExpenses.filter(x => filterByCompetencia(x.dataCompetencia));
+
+      const frete = [...dr, ...r].reduce((s, op) => s + safeNum(op.valorFrete), 0);
+      const gastoCombustivel = f.reduce((s, fuel) => s + safeNum(fuel.valor), 0);
+      const gastoManutencao = m.reduce((s, maint) => s + safeNum(maint.valor), 0);
+      const gastoPedagio = t.reduce((s, toll) => s + safeNum(toll.valor), 0);
+      const gastoEquipe = [...dr, ...r].reduce((s, op) => s + safeNum(op.valorMotorista) + safeNum(op.valorAjudante), 0);
+      const custos = gastoCombustivel + gastoManutencao + gastoPedagio + gastoEquipe;
+      const despesasFixas = fe.reduce((s, e) => s + safeNum(e.valor), 0);
+      const lucro = frete - custos - despesasFixas;
+
+      const [y, mm] = isAno ? [p, ''] : p.split('-');
+      const label = isAno ? p : `${mm}/${y}`;
+
+      list.push({
+        periodo: p,
+        label,
+        frete: Math.round(frete * 100) / 100,
+        custos: Math.round(custos * 100) / 100,
+        despesasFixas: Math.round(despesasFixas * 100) / 100,
+        lucro: Math.round(lucro * 100) / 100
+      });
+    });
+
+    return list;
+  }, [fuelings, maintenances, dailyRoutes, routes, tolls, fixedExpenses, agrupamento, startDate, endDate]);
+
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
@@ -125,6 +206,85 @@ const AdminVehicleReport: React.FC<AdminVehicleReportProps> = ({
         </div>
         <button onClick={onBack} className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs text-white">Voltar</button>
       </div>
+
+      <Card className="no-print bg-slate-900/40 border-slate-800">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Input label="Data Início" type="date" value={startDate} onChange={setStartDate} />
+          <Input label="Data Fim" type="date" value={endDate} onChange={setEndDate} />
+          <Select
+            label="Agrupar relatório por"
+            value={agrupamento}
+            onChange={(v) => setAgrupamento(v as 'periodo' | 'mes' | 'ano')}
+            options={[
+              { label: 'Período selecionado', value: 'periodo' },
+              { label: 'Por mês', value: 'mes' },
+              { label: 'Por ano', value: 'ano' }
+            ]}
+          />
+        </div>
+      </Card>
+
+      {(agrupamento === 'mes' || agrupamento === 'ano') && (
+        <>
+          <Card className="border-indigo-900/40 bg-indigo-950/10">
+            <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-indigo-400">Desempenho por {agrupamento === 'ano' ? 'ano' : 'mês'}</h3>
+            {desempenhoPorPeriodo.length > 0 ? (
+              <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={desempenhoPorPeriodo} margin={{ top: 10, right: 20, left: 10, bottom: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} stroke="#64748b" />
+                    <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} stroke="#64748b" tickFormatter={(v) => `R$ ${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
+                      formatter={(value: number, name: string) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, (name === 'frete' ? 'Faturamento' : name === 'custos' ? 'Custos' : name === 'lucro' ? 'Lucro' : name)]}
+                      labelFormatter={(label) => `${agrupamento === 'ano' ? 'Ano' : 'Mês'}: ${label}`}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <Line type="monotone" dataKey="frete" name="Faturamento" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="custos" name="Custos" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="lucro" name="Lucro" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Nenhum dado no período.</div>
+            )}
+          </Card>
+
+          <Card className="border-slate-800 overflow-hidden">
+            <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-white">Relatório por {agrupamento === 'ano' ? 'ano' : 'mês'}</h3>
+            {desempenhoPorPeriodo.length > 0 ? (
+              <div className="overflow-x-auto rounded-xl border border-slate-800">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                    <tr>
+                      <th className="p-3">{agrupamento === 'ano' ? 'Ano' : 'Mês/Ano'}</th>
+                      <th className="p-3 text-right">Faturamento</th>
+                      <th className="p-3 text-right">Custos Frota</th>
+                      <th className="p-3 text-right">Despesas Fixas</th>
+                      <th className="p-3 text-right">Lucro Líquido</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {desempenhoPorPeriodo.map((row, i) => (
+                      <tr key={i} className="border-t border-slate-800 hover:bg-slate-800/50">
+                        <td className="p-3 font-bold text-slate-200">{row.label}</td>
+                        <td className="p-3 text-right text-emerald-400">R$ {row.frete.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td className="p-3 text-right text-red-400">R$ {row.custos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td className="p-3 text-right text-amber-400">R$ {row.despesasFixas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td className={`p-3 text-right font-black ${row.lucro >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>R$ {row.lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-slate-500 text-sm py-4 text-center">Nenhum dado no período.</p>
+            )}
+          </Card>
+        </>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-slate-900/50 border-slate-800 text-center">
