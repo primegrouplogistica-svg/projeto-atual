@@ -138,7 +138,7 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
   };
 
   const filtered = useMemo(() => fixedExpenses.filter(e => e.dataCompetencia === mes), [fixedExpenses, mes]);
-  
+
   // Garantia de soma numérica real para despesas fixas
   const total = useMemo(() => filtered.reduce((acc, curr) => Number(acc) + Number(curr.valor || 0), 0), [filtered]);
 
@@ -165,7 +165,7 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
               <Input label="Dia do vencimento (1-31)" type="number" value={diaVencimento} onChange={setDiaVencimento} placeholder="Opcional" />
               <Input label="Descrição do Gasto" value={descricao} onChange={setDescricao} placeholder="Descrição do gasto" />
               <Input label="Valor (R$)" type="number" value={valor} onChange={setValor} placeholder="0.00" />
-              <BigButton onClick={() => {}}>CONFIRMAR GASTO</BigButton>
+              <BigButton type="submit" onClick={() => {}}>CONFIRMAR GASTO</BigButton>
             </form>
           </Card>
 
@@ -181,7 +181,7 @@ const AdminFixedExpenses: React.FC<AdminFixedExpensesProps> = ({ fixedExpenses, 
               <Input label="Número de parcelas" type="number" value={parcNumParcelas} onChange={setParcNumParcelas} placeholder="3" />
               <Input label="1ª parcela (mês/ano)" type="month" value={parcPrimeiraData} onChange={setParcPrimeiraData} />
               <Input label="Dia do vencimento (1-31)" type="number" value={parcDiaVencimento} onChange={setParcDiaVencimento} placeholder="Opcional" />
-              <BigButton onClick={() => {}} disabled={!parcDescricao.trim() || !parcValorTotal || Number(parcValorTotal) <= 0}>
+              <BigButton type="submit" onClick={() => {}} disabled={!parcDescricao.trim() || !parcValorTotal || Number(parcValorTotal) <= 0}>
                 LANÇAR PARCELAS
               </BigButton>
             </form>
