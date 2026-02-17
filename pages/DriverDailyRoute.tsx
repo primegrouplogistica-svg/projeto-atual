@@ -15,12 +15,6 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
   const [destino, setDestino] = useState('');
   const [oc, setOc] = useState('');
 
-  // Checklist Photos States (4 fotos agora) — armazenadas como base64 (data URL)
-  const [fotoFrente, setFotoFrente] = useState<string | null>(null);
-  const [fotoLatEsquerda, setFotoLatEsquerda] = useState<string | null>(null);
-  const [fotoLatDireita, setFotoLatDireita] = useState<string | null>(null);
-  const [fotoTraseira, setFotoTraseira] = useState<string | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingSetterRef = useRef<((url: string) => void) | null>(null);
 
@@ -72,10 +66,6 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
       valorMotorista: 0,
       valorAjudante: 0,
       statusFinanceiro: FinanceiroStatus.PENDENTE,
-      ...(fotoFrente && { fotoFrente }),
-      ...(fotoLatEsquerda && { fotoLateralEsquerda: fotoLatEsquerda }),
-      ...(fotoLatDireita && { fotoLateralDireita: fotoLatDireita }),
-      ...(fotoTraseira && { fotoTraseira }),
       ...(nivelOleo && { nivelOleo }),
       ...(nivelAgua && { nivelAgua }),
       createdAt: new Date().toISOString(),
@@ -157,7 +147,6 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
             </div>
           </div>
 
-          {/* Fotos da Inspeção — integração com câmera do celular */}
           <input
             type="file"
             ref={fileInputRef}
@@ -167,19 +156,6 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
             onChange={handlePhotoCaptured}
             aria-hidden
           />
-          <div className="space-y-4">
-            <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2 flex justify-between items-center">
-              Fotos da Inspeção (opcional)
-              {(fotoFrente && fotoLatEsquerda && fotoLatDireita && fotoTraseira) && <span className="text-[10px] text-emerald-500 bg-emerald-950 px-2 py-0.5 rounded">FOTOS OK</span>}
-            </h3>
-            <p className="text-[10px] text-slate-500">Opcional. Toque em cada quadro para tirar foto se quiser.</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <PhotoSlot label="Frente" value={fotoFrente} onCapture={() => openCamera(setFotoFrente)} onClear={() => setFotoFrente(null)} />
-              <PhotoSlot label="Lat. Esquerda" value={fotoLatEsquerda} onCapture={() => openCamera(setFotoLatEsquerda)} onClear={() => setFotoLatEsquerda(null)} />
-              <PhotoSlot label="Lat. Direita" value={fotoLatDireita} onCapture={() => openCamera(setFotoLatDireita)} onClear={() => setFotoLatDireita(null)} />
-              <PhotoSlot label="Traseira" value={fotoTraseira} onCapture={() => openCamera(setFotoTraseira)} onClear={() => setFotoTraseira(null)} />
-            </div>
-          </div>
 
           {/* Avaria nova */}
           <div className="space-y-4">
@@ -228,69 +204,4 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
             {/* Nível de Óleo */}
             <div className="space-y-4">
               <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2">
-                Nível de Óleo do Motor (opcional)
-              </h3>
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => setNivelOleo('no_nivel')}
-                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between ${nivelOleo === 'no_nivel' ? 'border-blue-600 bg-blue-900/20 text-blue-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}
-                >
-                  <span className="font-bold text-[10px] uppercase">No Nível</span>
-                  <span className="text-lg font-black">{nivelOleo === 'no_nivel' ? 'X' : ''}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNivelOleo('abaixo_do_nivel')}
-                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between ${nivelOleo === 'abaixo_do_nivel' ? 'border-red-600 bg-red-900/20 text-red-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}
-                >
-                  <span className="font-bold text-[10px] uppercase">Abaixo do Nível</span>
-                  <span className="text-lg font-black">{nivelOleo === 'abaixo_do_nivel' ? 'X' : ''}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Nível de Água */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2">
-                Nível de Água (Arrefecimento) (opcional)
-              </h3>
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => setNivelAgua('no_nivel')}
-                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between ${nivelAgua === 'no_nivel' ? 'border-blue-600 bg-blue-900/20 text-blue-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}
-                >
-                  <span className="font-bold text-[10px] uppercase">No Nível</span>
-                  <span className="text-lg font-black">{nivelAgua === 'no_nivel' ? 'X' : ''}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNivelAgua('abaixo_do_nivel')}
-                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between ${nivelAgua === 'abaixo_do_nivel' ? 'border-red-600 bg-red-900/20 text-red-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}
-                >
-                  <span className="font-bold text-[10px] uppercase">Abaixo do Nível</span>
-                  <span className="text-lg font-black">{nivelAgua === 'abaixo_do_nivel' ? 'X' : ''}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-4">
-            <p className="text-[10px] text-slate-500 text-center mb-4">Preencha cliente, destino e OC. Fotos e níveis são opcionais.</p>
-            <button
-              type="button"
-              onClick={() => handleSubmit()}
-              disabled={!canSubmit}
-              className={`relative w-full p-6 text-sm font-black uppercase tracking-widest rounded-2xl border-b-4 flex flex-col items-center justify-center gap-4 transition-all active:translate-y-1 active:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed ${canSubmit ? 'bg-blue-700 hover:bg-blue-600 border-blue-600 text-white' : 'bg-slate-800 border-slate-700 text-slate-100'}`}
-            >
-              INICIAR ROTA
-            </button>
-          </div>
-        </form>
-      </Card>
-    </div>
-  );
-};
-
-export default DriverDailyRoute;
+                Nível de Óleo do Motor
