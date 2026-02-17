@@ -11,15 +11,28 @@ interface AdminDriverLiveProps {
 
 export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack }) => {
   const [locations, setLocations] = useState<DriverLocation[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Enriquecer com nome do usuário
   const enrichedLocations = useMemo(() => {
     const userMap = new Map(users.map((u) => [u.id, u.nome]));
-    return locations.map((loc) => ({
+    const result = locations.map((loc) => ({
       ...loc,
       userName: userMap.get(loc.userId) ?? loc.userName ?? 'Motorista',
     }));
-  }, [locations, users]);
+
+    // Garante que sempre exista um selecionado quando chegarem localizações
+    if (result.length > 0 && !selectedUserId) {
+      setSelectedUserId(result[0].userId);
+    }
+
+    return result;
+  }, [locations, users, selectedUserId]);
+
+  const selectedLocation = useMemo(
+    () => enrichedLocations.find((loc) => loc.userId === selectedUserId) ?? enrichedLocations[0],
+    [enrichedLocations, selectedUserId]
+  );
 
   useEffect(() => {
     if (!supabase) return;
@@ -33,7 +46,9 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
     <div className="space-y-6 animate-fadeIn max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tight text-white">Localização em tempo real</h2>
+          <h2 className="text-3xl font-black uppercase tracking-tight text-white">
+            Localização em tempo real
+          </h2>
           {isSupabaseConfigured ? (
             <p className="text-slate-500 text-sm mt-1">
               Monitoramento em tempo quase real dos motoristas conectados via app móvel (Supabase).
@@ -41,64 +56,54 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
           ) : (
             <p className="text-amber-400 text-sm mt-1">
               Para ativar o monitoramento em tempo real, configure as variáveis{' '}
-              <code className="px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[11px]">VITE_SUPABASE_URL</code> e{' '}
-              <code className="px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[11px]">VITE_SUPABASE_ANON_KEY</code>{' '}
+              <code className="px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[11px]">
+                VITE_SUPABASE_URL
+              </code>{' '}
+              e{' '}
+              <code className="px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[11px]">
+                VITE_SUPABASE_ANON_KEY
+              </code>{' '}
               no arquivo <span className="font-mono">.env</span> / ambiente do Vite.
             </p>
           )}
         </div>
-        <button onClick={onBack} className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs text-white shrink-0">
+        <button
+          onClick={onBack}
+          className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs text-white shrink-0"
+        >
           Voltar
         </button>
       </div>
 
       {isSupabaseConfigured ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Mapa simplificado */}
+          {/* Mapa Google Maps focado no motorista selecionado */}
           <Card className="lg:col-span-2 min-h-[420px] p-0 overflow-hidden border-slate-800 relative">
-            <div className="absolute inset-0 bg-[#020617]">
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage: 'radial-gradient(#22d3ee 1px, transparent 1px)',
-                  backgroundSize: '26px 26px',
-                }}
-              ></div>
-
-              {enrichedLocations.map((loc, index) => (
-                <div
-                  key={`${loc.userId}-${index}`}
-                  className="absolute animate-pulse"
-                  style={{
-                    top: `${20 + (index * 15) % 55}%`,
-                    left: `${18 + (index * 29) % 64}%`,
-                  }}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="bg-emerald-500 text-slate-950 p-2 rounded-full shadow-lg shadow-emerald-900/60 border border-emerald-300/70">
-                      <span className="text-lg">🚚</span>
-                    </div>
-                    <span className="bg-slate-950/90 px-2 py-0.5 rounded text-[9px] font-mono font-bold border border-slate-800 text-white">
-                      {loc.userName}
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              <div className="absolute bottom-4 right-4 bg-slate-950/80 border border-slate-800 px-4 py-3 rounded-xl backdrop-blur">
-                <h4 className="text-[10px] font-black text-sky-400 uppercase mb-1 tracking-widest">Legenda</h4>
-                <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>Motorista online (últimas coordenadas recebidas)</span>
-                </div>
+            {selectedLocation ? (
+              <iframe
+                title={`Mapa - ${selectedLocation.userName}`}
+                src={`https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}&z=15&output=embed`}
+                className="w-full h-[420px] border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[420px] bg-slate-950">
+                <span className="text-4xl mb-3">📡</span>
+                <p className="text-sm text-slate-400 text-center max-w-md">
+                  Assim que recebermos a primeira coordenada de um motorista online, o mapa será exibido aqui com a
+                  posição em tempo real.
+                </p>
               </div>
-            </div>
+            )}
           </Card>
 
           {/* Lista de posições */}
           <Card className="border-slate-800 max-h-[420px] overflow-y-auto scrollbar-thin">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-black text-slate-100 uppercase tracking-widest">Motoristas Localizados</h3>
+              <h3 className="text-sm font-black text-slate-100 uppercase tracking-widest">
+                Motoristas Localizados
+              </h3>
               <Badge status={enrichedLocations.length ? 'aprovado' : 'pendente'}>
                 {enrichedLocations.length ? `${enrichedLocations.length} ativos` : 'Aguardando posições'}
               </Badge>
@@ -107,7 +112,12 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
               {enrichedLocations.map((loc) => (
                 <div
                   key={`${loc.userId}-${loc.updatedAt}`}
-                  className="flex flex-col gap-1 py-2 border-b border-slate-800 last:border-b-0"
+                  className={`flex flex-col gap-1 py-2 border-b border-slate-800 last:border-b-0 cursor-pointer rounded ${
+                    selectedLocation && selectedLocation.userId === loc.userId
+                      ? 'bg-slate-900/60'
+                      : 'hover:bg-slate-900/40'
+                  }`}
+                  onClick={() => setSelectedUserId(loc.userId)}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-white">{loc.userName}</span>
@@ -122,6 +132,17 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
                   <div className="text-[10px] text-slate-400 font-mono">
                     lat: {loc.lat.toFixed(5)} | lng: {loc.lng.toFixed(5)}{' '}
                     {loc.accuracy != null && <span>(±{Math.round(loc.accuracy)}m)</span>}
+                  </div>
+                  <div className="flex justify-end mt-1">
+                    <a
+                      href={`https://www.google.com/maps?q=${loc.lat},${loc.lng}&z=16`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-sky-400 hover:text-sky-300 font-bold uppercase tracking-widest"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Abrir no Google Maps
+                    </a>
                   </div>
                 </div>
               ))}
@@ -138,7 +159,8 @@ export const AdminDriverLive: React.FC<AdminDriverLiveProps> = ({ users, onBack 
       ) : (
         <Card className="border-amber-900/40 bg-amber-950/20">
           <p className="text-amber-100 text-sm">
-            Supabase não está configurado. Sem ele, o app não consegue salvar e ler as coordenadas dos motoristas em tempo real.
+            Supabase não está configurado. Sem ele, o app não consegue salvar e ler as coordenadas dos motoristas em
+            tempo real.
           </p>
         </Card>
       )}
