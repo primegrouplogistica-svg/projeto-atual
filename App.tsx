@@ -339,6 +339,7 @@ const App: React.FC = () => {
   const DriverDailyRoute = React.lazy(() => import('./pages/DriverDailyRoute'));
   const AdminVehicleReport = React.lazy(() => import('./pages/AdminVehicleReport'));
   const AdminActivityReport = React.lazy(() => import('./pages/AdminActivityReport'));
+  const AdminTeamReport = React.lazy(() => import('./pages/AdminTeamReport'));
   const AdminChecklistReport = React.lazy(() => import('./pages/AdminChecklistReport'));
   const AdminFixedExpenses = React.lazy(() => import('./pages/AdminFixedExpenses'));
   const AdminTracking = React.lazy(() => import('./pages/AdminTracking'));
@@ -440,6 +441,8 @@ const App: React.FC = () => {
         return <AdminDriverLive users={users} onBack={() => navigate('operation')} />;
       case 'admin-checklists':
         return <AdminChecklistReport dailyRoutes={dailyRoutes} users={users} vehicles={vehicles} onBack={() => navigate('operation')} />;
+      case 'admin-payments-team':
+        return <AdminTeamReport dailyRoutes={dailyRoutes} routes={routes} users={users} onBack={() => navigate('operation')} />;
       case 'admin-consolidated-finance':
         return <AdminConsolidatedFinancialReport dailyRoutes={dailyRoutes} routes={routes} fuelings={fuelings} maintenances={maintenances} tolls={tolls} agregadoFreights={agregadoFreights} fixedExpenses={fixedExpenses} users={users} onBack={() => navigate('operation')} onDeleteMovement={(m) => {
           const id = m.id;

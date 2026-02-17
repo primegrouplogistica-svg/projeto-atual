@@ -22,6 +22,7 @@ import {
   ShieldCheck, 
   Handshake, 
   Wallet,
+  Banknote,
   LayoutDashboard,
   Terminal,
   MapPin
@@ -224,6 +225,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
               {/* CATEGORIA 3: RELATÓRIOS DE PERFORMANCE */}
               <SectionHeader title="Financeiro" />
               {hasPermission('admin-consolidated-finance') && <BigButton onClick={() => onNavigate('admin-consolidated-finance')} icon={<Wallet size={32} />} variant="success">Faturamento</BigButton>}
+              {hasPermission('admin-payments-team') && <BigButton onClick={() => onNavigate('admin-payments-team')} icon={<Banknote size={32} />} variant="primary">Pagamentos Equipe</BigButton>}
               {hasPermission('admin-vehicle-report') && <BigButton onClick={() => onNavigate('admin-vehicle-report')} icon={<BarChart3 size={32} />} variant="secondary">Desempenho</BigButton>}
               {hasPermission('admin-agregado-report') && <BigButton onClick={() => onNavigate('admin-agregado-report')} icon={<LineChart size={32} />} variant="secondary">Agregados</BigButton>}
               {hasPermission('admin-fixed-expenses') && <BigButton onClick={() => onNavigate('admin-fixed-expenses')} icon={<LineChart size={32} />} variant="secondary">Custos Fixos</BigButton>}

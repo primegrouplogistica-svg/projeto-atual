@@ -139,14 +139,15 @@ const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes = [], rou
   const copyResumoDetalhadoWhatsApp = () => {
     if (!resumoPessoaSelecionada) return;
     const periodo = startDate && endDate ? `${startDate} a ${endDate}` : startDate ? `a partir de ${startDate}` : endDate ? `até ${endDate}` : 'todo o período';
-    let msg = `📋 *Resumo - ${resumoPessoaSelecionada.nome} (Equipe)*\nPeríodo: ${periodo}\n\n`;
+    let msg = `📋 *Pagamento - ${resumoPessoaSelecionada.nome}*\nPeríodo: ${periodo}\n\n`;
     pagamentosPessoaSelecionada.forEach(p => {
       const data = new Date(p.data).toLocaleDateString('pt-BR');
       const tipo = p.tipo;
       const oc = p.oc || '—';
       const placa = p.placa || '—';
+      const destino = p.destino || '—';
       const valor = p.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-      msg += `• ${data} | ${tipo} | OC ${oc} | ${placa} → R$ ${valor}\n`;
+      msg += `• ${data} | ${tipo} | OC ${oc} | Placa ${placa} | ${destino} → R$ ${valor}\n`;
     });
     msg += `\n*Total a pagar: R$ ${resumoPessoaSelecionada.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n\n_Prime Group_`;
     navigator.clipboard.writeText(msg).then(() => {
@@ -158,7 +159,7 @@ const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes = [], rou
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
       <div className="flex justify-between items-center no-print">
-        <h2 className="text-3xl font-black uppercase text-white">Relatório de Equipe</h2>
+        <h2 className="text-3xl font-black uppercase text-white">Pagamentos Motoristas e Ajudantes</h2>
         <button onClick={onBack} className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs uppercase text-white">Voltar</button>
       </div>
 
@@ -201,6 +202,7 @@ const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes = [], rou
                     <th className="p-3">Tipo</th>
                     <th className="p-3">OC</th>
                     <th className="p-3">Placa</th>
+                    <th className="p-3">Destino</th>
                     <th className="p-3 text-right">Valor a pagar</th>
                   </tr>
                 </thead>
@@ -211,6 +213,7 @@ const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes = [], rou
                       <td className="p-3 font-bold text-slate-200">{p.tipo}</td>
                       <td className="p-3 font-bold text-slate-200">{p.oc || '—'}</td>
                       <td className="p-3 font-mono text-blue-400">{p.placa || '—'}</td>
+                      <td className="p-3 text-slate-300">{p.destino || '—'}</td>
                       <td className="p-3 text-right font-black text-red-400">R$ {p.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   ))}
