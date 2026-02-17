@@ -6,10 +6,11 @@ import { Card, Input, BigButton, Badge } from '../components/UI';
 interface AdminAgregadoManagementProps {
   agregados: Agregado[];
   onUpdateAgregados: (newAgregados: Agregado[]) => void;
+  onDeleteAgregado: (id: string) => void;
   onBack: () => void;
 }
 
-const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agregados, onUpdateAgregados, onBack }) => {
+const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agregados, onUpdateAgregados, onDeleteAgregado, onBack }) => {
   const [showForm, setShowForm] = useState(false);
   const [nome, setNome] = useState('');
   const [placa, setPlaca] = useState('');
@@ -37,7 +38,7 @@ const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agreg
 
   const handleDelete = (agregado: Agregado) => {
     if (!window.confirm(`Excluir o agregado "${agregado.nome}" (${agregado.placa})? Esta ação não pode ser desfeita.`)) return;
-    onUpdateAgregados(agregados.filter(a => a.id !== agregado.id));
+    onDeleteAgregado(agregado.id);
   };
 
   return (

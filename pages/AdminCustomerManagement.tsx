@@ -6,10 +6,11 @@ import { Card, Badge, Input, BigButton } from '../components/UI';
 interface AdminCustomerManagementProps {
   customers: Customer[];
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>;
+  onDeleteCustomer: (id: string) => void;
   onBack: () => void;
 }
 
-const AdminCustomerManagement: React.FC<AdminCustomerManagementProps> = ({ customers, setCustomers, onBack }) => {
+const AdminCustomerManagement: React.FC<AdminCustomerManagementProps> = ({ customers, setCustomers, onDeleteCustomer, onBack }) => {
   const [showForm, setShowForm] = useState(false);
   const [nome, setNome] = useState('');
   const [cnpj, setCnpj] = useState('');
@@ -37,7 +38,7 @@ const AdminCustomerManagement: React.FC<AdminCustomerManagementProps> = ({ custo
 
   const handleDelete = (customer: Customer) => {
     if (!window.confirm(`Excluir o cliente "${customer.nome}"? Esta ação não pode ser desfeita.`)) return;
-    setCustomers(prev => prev.filter(c => c.id !== customer.id));
+    onDeleteCustomer(customer.id);
   };
 
   return (

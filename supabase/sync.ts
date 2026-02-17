@@ -120,3 +120,19 @@ export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData)
     console.error('syncAllToSupabase:', e);
   }
 }
+
+/** Remove registro do Supabase para que não volte ao sincronizar */
+export async function deleteUserFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('users').delete().eq('id', id);
+  if (error) console.error('deleteUserFromSupabase:', error);
+}
+
+export async function deleteAgregadoFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('agregados').delete().eq('id', id);
+  if (error) console.error('deleteAgregadoFromSupabase:', error);
+}
+
+export async function deleteCustomerFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('customers').delete().eq('id', id);
+  if (error) console.error('deleteCustomerFromSupabase:', error);
+}

@@ -10,7 +10,7 @@ import { Logo } from './components/UI';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DriverLocationSender } from './components/DriverLocationSender';
 import { supabase, isSupabaseOnline } from './supabase';
-import { loadAllFromSupabase, syncAllToSupabase } from './supabase/sync';
+import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase } from './supabase/sync';
 import { RefreshCw } from 'lucide-react';
 import AdminFuelingForm from './pages/AdminFuelingForm';
 
@@ -408,13 +408,13 @@ const App: React.FC = () => {
       case 'admin-pending':
         return <AdminPending fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} vehicles={vehicles} users={users} currentUser={currentUser} onUpdateFueling={(id, up) => updateRecord(setFuelings, id, up)} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} onDeleteFueling={(id) => deleteRecord(setFuelings, id)} onDeleteMaintenance={(id) => deleteRecord(setMaintenances, id)} onDeleteDailyRoute={(id) => deleteRecord(setDailyRoutes, id)} onDeleteRoute={(id) => deleteRecord(setRoutes, id)} onBack={() => navigate('operation')} />;
       case 'user-mgmt':
-        return <UserManagement users={users} onSaveUser={onSaveUser} onDeleteUser={(id) => setUsers(prev => prev.filter(u => u.id !== id))} onBack={() => navigate('operation')} />;
+        return <UserManagement users={users} onSaveUser={onSaveUser} onDeleteUser={async (id) => { if (supabase) await deleteUserFromSupabase(supabase, id); setUsers(prev => prev.filter(u => u.id !== id)); }} onBack={() => navigate('operation')} />;
       case 'vehicle-mgmt':
         return <VehicleManagement vehicles={vehicles} onSaveVehicle={onSaveVehicle} onUpdateVehicle={(id, up) => updateRecord(setVehicles, id, up)} onBack={() => navigate('operation')} />;
       case 'admin-customers':
-        return <AdminCustomerManagement customers={customers} setCustomers={setCustomers} onBack={() => navigate('operation')} />;
+        return <AdminCustomerManagement customers={customers} setCustomers={setCustomers} onDeleteCustomer={async (id) => { if (supabase) await deleteCustomerFromSupabase(supabase, id); setCustomers(prev => prev.filter(c => c.id !== id)); }} onBack={() => navigate('operation')} />;
       case 'admin-agregado-mgmt':
-        return <AdminAgregadoManagement agregados={agregados} onUpdateAgregados={setAgregados} onBack={() => navigate('operation')} />;
+        return <AdminAgregadoManagement agregados={agregados} onUpdateAgregados={setAgregados} onDeleteAgregado={async (id) => { if (supabase) await deleteAgregadoFromSupabase(supabase, id); setAgregados(prev => prev.filter(a => a.id !== id)); }} onBack={() => navigate('operation')} />;
       case 'admin-agregado-freight':
         return <AdminAgregadoFreight agregados={agregados} onSubmit={(f) => saveRecord(setAgregadoFreights, f)} onBack={() => navigate('operation')} />;
       case 'admin-agregado-report':
