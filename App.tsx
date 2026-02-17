@@ -354,6 +354,7 @@ const App: React.FC = () => {
   const AdminAgregadoReport = React.lazy(() => import('./pages/AdminAgregadoReport'));
   const AdminMaintenanceHistory = React.lazy(() => import('./pages/AdminMaintenanceHistory'));
   const AdminMaintenanceDone = React.lazy(() => import('./pages/AdminMaintenanceDone'));
+  const FuelingRegistry = React.lazy(() => import('./pages/FuelingRegistry'));
   const HelperRouteBinding = React.lazy(() => import('./pages/HelperRouteBinding'));
   const TechnicalDocs = React.lazy(() => import('./pages/TechnicalDocs'));
 
@@ -425,6 +426,8 @@ const App: React.FC = () => {
         return <AdminCreateDailyRoute users={users} vehicles={vehicles} customers={customers} onSubmit={(r) => { saveRecord(setDailyRoutes, r); navigate('operation'); }} onBack={() => navigate('operation')} />;
       case 'admin-fueling':
         return <AdminFuelingForm vehicles={vehicles} users={users} onSubmit={(f) => { saveRecord(setFuelings, f); navigate('operation'); }} onBack={() => navigate('operation')} />;
+      case 'admin-fueling-registry':
+        return <FuelingRegistry fuelings={fuelings} users={users} onBack={() => navigate('operation')} />;
       case 'admin-preventive':
         return <AdminPreventiveMaintenance vehicles={vehicles} currentUser={currentUser} onUpdateVehicle={(id, up) => updateRecord(setVehicles, id, up)} onAddMaintenance={(m) => saveRecord(setMaintenances, m)} onBack={() => navigate('operation')} />;
       case 'admin-maintenance-history':
