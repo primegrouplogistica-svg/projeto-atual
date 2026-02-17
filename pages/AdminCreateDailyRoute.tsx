@@ -172,7 +172,8 @@ const AdminCreateDailyRoute: React.FC<AdminCreateDailyRouteProps> = ({ users, ve
           </div>
 
           <BigButton 
-            onClick={() => {}} 
+            type="submit"
+            onClick={() => {}}
             variant="primary" 
             disabled={!motoristaId || !vehicleId || !clienteId || !destino || !oc || !selectedDate}
           >
