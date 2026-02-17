@@ -1,0 +1,39 @@
+========================================
+  O APP AINDA NÃO ESTÁ ONLINE – O QUE CONFERIR
+========================================
+
+1. FEZ REDEPLOY DEPOIS DE ADICIONAR AS VARIÁVEIS?
+   As variáveis só entram no build na hora do deploy.
+   • No Vercel: Deployments → no último deploy, ⋮ (três pontinhos) → Redeploy
+   • Ou: na página do projeto, botão "Redeploy" e confirme
+   Espere o deploy terminar (1–3 min).
+
+2. O ÚLTIMO DEPLOY DEU CERTO?
+   • No Vercel: Deployments
+   • O último item está com ✓ (verde) ou ✗ (vermelho)?
+   • Se estiver vermelho, clique nele e veja "Build Logs" ou "Logs"
+   • Erro comum: "Root Directory" errado (veja item 3)
+
+3. O PACKAGE.JSON ESTÁ NA RAIZ DO REPOSITÓRIO?
+   • No GitHub, abra o repositório (Prime-novo-v2)
+   • Na raiz você vê package.json, App.tsx, pasta "pages", etc.?
+   • Se SIM → no Vercel, Root Directory pode ficar em branco
+   • Se NÃO (os arquivos estão dentro de uma pasta, ex.: prime-projeto-main):
+     No Vercel: Settings → General → Root Directory → coloque: prime-projeto-main
+     Depois: Redeploy
+
+4. VARIÁVEIS NO VERCEL ESTÃO CERTINHAS?
+   • Settings → Environment Variables
+   • Deve ter:
+     VITE_SUPABASE_URL = https://jqyurjuknfjrofyjzuwg.supabase.co
+     VITE_SUPABASE_ANON_KEY = (a chave publicável do Supabase, sb_publishable_...)
+   • Nomes exatamente assim, sem espaço no fim
+   • Depois de mudar variável: fazer Redeploy
+
+5. ABRIR A URL DO SITE
+   • No Vercel, na página do projeto, aparece "Visit" ou o domínio (ex.: prime-novo-v2.vercel.app)
+   • Clique e teste. Se der tela preta ou erro, veja o console do navegador (F12 → Console)
+
+========================================
+RESUMO: adicionar variáveis → Redeploy → esperar terminar → abrir a URL
+========================================
