@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { DailyRoute, RouteDeparture, User, FinanceiroStatus } from '../types';
+import { DailyRoute, RouteDeparture, User, UserRole, FinanceiroStatus } from '../types';
 import { Card, Input, Select } from '../components/UI';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -23,7 +23,7 @@ interface AdminTeamReportProps {
   onBack: () => void;
 }
 
-const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes, routes, users, onBack }) => {
+const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes = [], routes = [], users = [], onBack }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
@@ -35,25 +35,28 @@ const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes, routes, 
       const n = Number(v);
       return isNaN(n) ? 0 : n;
     };
+    const routesList = Array.isArray(routes) ? routes : [];
+    const dailyList = Array.isArray(dailyRoutes) ? dailyRoutes : [];
+    const usersList = Array.isArray(users) ? users : [];
 
-    routes
-      .filter(r => r.statusFinanceiro === FinanceiroStatus.APROVADO)
+    routesList
+      .filter(r => r && r.statusFinanceiro === FinanceiroStatus.APROVADO)
       .forEach(r => {
         const vm = safeNum(r.valorMotorista);
         const va = safeNum(r.valorAjudante);
-        const motoristaNome = users.find(u => u.id === r.motoristaId)?.nome ?? 'Motorista';
-        const ajudanteNome = r.ajudanteNome ?? users.find(u => u.id === r.ajudanteId)?.nome ?? 'Ajudante';
+        const motoristaNome = usersList.find(u => u.id === r.motoristaId)?.nome ?? 'Motorista';
+        const ajudanteNome = r.ajudanteNome ?? usersList.find(u => u.id === r.ajudanteId)?.nome ?? 'Ajudante';
         if (vm > 0) list.push({ id: `route-m-${r.id}`, data: r.createdAt, tipo: 'Viagem', papel: 'motorista', pessoaId: r.motoristaId, pessoaNome: motoristaNome, placa: r.placa, destino: r.destino || '—', oc: r.oc, valor: vm });
         if (va > 0) list.push({ id: `route-a-${r.id}`, data: r.createdAt, tipo: 'Viagem', papel: 'ajudante', pessoaId: r.ajudanteId, pessoaNome: ajudanteNome, placa: r.placa, destino: r.destino || '—', oc: r.oc, valor: va });
       });
 
-    dailyRoutes
-      .filter(r => r.statusFinanceiro === FinanceiroStatus.APROVADO)
+    dailyList
+      .filter(r => r && r.statusFinanceiro === FinanceiroStatus.APROVADO)
       .forEach(r => {
         const vm = safeNum(r.valorMotorista);
         const va = safeNum(r.valorAjudante);
-        const motoristaNome = users.find(u => u.id === r.motoristaId)?.nome ?? 'Motorista';
-        const ajudanteNome = r.ajudanteNome ?? users.find(u => u.id === r.ajudanteId)?.nome ?? 'Ajudante';
+        const motoristaNome = usersList.find(u => u.id === r.motoristaId)?.nome ?? 'Motorista';
+        const ajudanteNome = r.ajudanteNome ?? usersList.find(u => u.id === r.ajudanteId)?.nome ?? 'Ajudante';
         if (vm > 0) list.push({ id: `daily-m-${r.id}`, data: r.createdAt, tipo: 'Diário', papel: 'motorista', pessoaId: r.motoristaId, pessoaNome: motoristaNome, placa: r.placa, destino: r.destino || '—', oc: r.oc, valor: vm });
         if (va > 0 && r.ajudanteId) list.push({ id: `daily-a-${r.id}`, data: r.createdAt, tipo: 'Diário', papel: 'ajudante', pessoaId: r.ajudanteId, pessoaNome: ajudanteNome, placa: r.placa, destino: r.destino || '—', oc: r.oc, valor: va });
       });
@@ -83,24 +86,30 @@ const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes, routes, 
     };
   }, [filtered]);
 
-  const pessoaOptions = useMemo(() => {
-    const byId = new Map<string, string>();
-    filtered.forEach(p => byId.set(p.pessoaId, p.pessoaNome));
-    return Array.from(byId.entries())
-      .sort((a, b) => (a[1] as string).localeCompare(b[1] as string))
-      .map(([value, label]) => ({ label, value }));
-  }, [filtered]);
+  /** Toda a equipe: motoristas e ajudantes cadastrados (ativos) — para o relatório puxar todos */
+  const equipeCompleta = useMemo(() => {
+    const list = (users || []).filter(
+      u => u.ativo !== false && (u.perfil === UserRole.MOTORISTA || u.perfil === UserRole.AJUDANTE)
+    );
+    return list.sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [users]);
 
+  const pessoaOptions = useMemo(() => {
+    return [{ label: '— Todas —', value: '' }, ...equipeCompleta.map(u => ({ label: u.nome, value: u.id }))];
+  }, [equipeCompleta]);
+
+  /** Resumo por pessoa: toda a equipe (motoristas e ajudantes), com total a pagar no período (0 se não houver) */
   const resumoPorPessoa = useMemo(() => {
     const byId: Record<string, { pessoaNome: string; totalAPagar: number }> = {};
+    equipeCompleta.forEach(u => byId[u.id] = { pessoaNome: u.nome, totalAPagar: 0 });
     filtered.forEach(p => {
-      if (!byId[p.pessoaId]) byId[p.pessoaId] = { pessoaNome: p.pessoaNome, totalAPagar: 0 };
-      byId[p.pessoaId].totalAPagar += p.valor;
+      if (byId[p.pessoaId]) byId[p.pessoaId].totalAPagar += p.valor;
+      else byId[p.pessoaId] = { pessoaNome: p.pessoaNome, totalAPagar: p.valor };
     });
     return Object.entries(byId)
       .map(([pessoaId, d]) => ({ pessoaId, pessoaNome: d.pessoaNome, totalAPagar: Math.round(d.totalAPagar * 100) / 100 }))
       .sort((a, b) => b.totalAPagar - a.totalAPagar);
-  }, [filtered]);
+  }, [equipeCompleta, filtered]);
 
   const pagamentosPessoaSelecionada = useMemo(() => {
     if (!selectedPessoaId) return [];
@@ -108,11 +117,11 @@ const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes, routes, 
   }, [filtered, selectedPessoaId]);
 
   const resumoPessoaSelecionada = useMemo(() => {
-    if (pagamentosPessoaSelecionada.length === 0) return null;
-    const nome = pagamentosPessoaSelecionada[0].pessoaNome;
+    if (!selectedPessoaId) return null;
+    const nome = equipeCompleta.find(u => u.id === selectedPessoaId)?.nome ?? pagamentosPessoaSelecionada[0]?.pessoaNome ?? 'Pessoa';
     const totalAPagar = pagamentosPessoaSelecionada.reduce((s, p) => s + p.valor, 0);
     return { nome, totalAPagar: Math.round(totalAPagar * 100) / 100 };
-  }, [pagamentosPessoaSelecionada]);
+  }, [selectedPessoaId, equipeCompleta, pagamentosPessoaSelecionada]);
 
   const chartPorPessoa = useMemo(() => {
     return resumoPorPessoa.map(r => ({ nome: r.pessoaNome, valor: r.totalAPagar }));
@@ -157,7 +166,7 @@ const AdminTeamReport: React.FC<AdminTeamReportProps> = ({ dailyRoutes, routes, 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Input label="Data Início" type="date" value={startDate} onChange={setStartDate} />
           <Input label="Data Fim" type="date" value={endDate} onChange={setEndDate} />
-          <Select label="Filtrar Pessoa" value={selectedPessoaId} onChange={setSelectedPessoaId} options={[{ label: '— Todas —', value: '' }, ...pessoaOptions]} />
+          <Select label="Filtrar Pessoa" value={selectedPessoaId} onChange={setSelectedPessoaId} options={pessoaOptions} />
         </div>
       </Card>
 
