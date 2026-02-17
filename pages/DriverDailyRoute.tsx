@@ -203,5 +203,62 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             {/* Nível de Óleo */}
             <div className="space-y-4">
-              <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2">
-                Nível de Óleo do Motor
+              <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2">Nível de Óleo do Motor (opcional)</h3>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNivelOleo('no_nivel')}
+                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between ${nivelOleo === 'no_nivel' ? 'border-blue-600 bg-blue-900/20 text-blue-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}
+                >
+                  <span className="font-bold text-[10px] uppercase">No Nível</span>
+                  <span className="text-lg font-black">{nivelOleo === 'no_nivel' ? 'X' : ''}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNivelOleo('abaixo_do_nivel')}
+                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between ${nivelOleo === 'abaixo_do_nivel' ? 'border-red-600 bg-red-900/20 text-red-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}
+                >
+                  <span className="font-bold text-[10px] uppercase">Abaixo do Nível</span>
+                  <span className="text-lg font-black">{nivelOleo === 'abaixo_do_nivel' ? 'X' : ''}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Nível de Água */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest border-b border-slate-800 pb-2">Nível de Água (Arrefecimento) (opcional)</h3>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNivelAgua('no_nivel')}
+                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between ${nivelAgua === 'no_nivel' ? 'border-blue-600 bg-blue-900/20 text-blue-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}
+                >
+                  <span className="font-bold text-[10px] uppercase">No Nível</span>
+                  <span className="text-lg font-black">{nivelAgua === 'no_nivel' ? 'X' : ''}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNivelAgua('abaixo_do_nivel')}
+                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between ${nivelAgua === 'abaixo_do_nivel' ? 'border-red-600 bg-red-900/20 text-red-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}
+                >
+                  <span className="font-bold text-[10px] uppercase">Abaixo do Nível</span>
+                  <span className="text-lg font-black">{nivelAgua === 'abaixo_do_nivel' ? 'X' : ''}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <p className="text-[10px] text-slate-500 text-center mb-4">Preencha cliente, destino e OC. Fotos e níveis são opcionais.</p>
+            <button
+              type="button"
+              onClick={() => handleSubmit()}
+              disabled={!canSubmit}
+              className={`relative w-full p-6 text-sm font-black uppercase tracking-widest rounded-2xl border-b-4 flex flex-col items-center justify-center gap-4 transition-all active:translate-y-1 active:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed ${canSubmit ? 'bg-blue-700 hover:bg-blue-600 border-blue-600 text-white' : 'bg-slate-800 border-slate-700 text-slate-100'}`}
+            >
+              INICIAR ROTA
+            </button>
+          </div>
+        </form>
+      </Card>
+    </div>
