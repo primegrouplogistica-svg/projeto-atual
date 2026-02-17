@@ -13,6 +13,7 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedPlaca, setSelectedPlaca] = useState('');
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const placaOptions = useMemo(() => {
     const plates = Array.from(new Set(freights.map(f => f.placa))).sort();
@@ -62,6 +63,35 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
       lucro: Math.round(d.lucro * 100) / 100,
     })).sort((a, b) => b.lucro - a.lucro);
   }, [filtered]);
+
+  const resumoPorAgregado = useMemo(() => {
+    const byKey: Record<string, { nome: string; placa: string; totalAPagar: number }> = {};
+    filtered.forEach(f => {
+      const nome = f.nomeAgregado || 'Sem nome';
+      const placa = f.placa || '—';
+      const key = `${nome}|${placa}`;
+      if (!byKey[key]) byKey[key] = { nome, placa, totalAPagar: 0 };
+      byKey[key].totalAPagar += Number(f.valorAgregado || 0);
+    });
+    return Object.entries(byKey)
+      .map(([key, d]) => ({ key, ...d, totalAPagar: Math.round(d.totalAPagar * 100) / 100 }))
+      .sort((a, b) => b.totalAPagar - a.totalAPagar);
+  }, [filtered]);
+
+  const copyResumoWhatsApp = (item: { nome: string; placa: string; totalAPagar: number }, key: string) => {
+    const periodo = startDate && endDate
+      ? `${startDate} a ${endDate}`
+      : startDate
+        ? `a partir de ${startDate}`
+        : endDate
+          ? `até ${endDate}`
+          : 'todo o período';
+    const msg = `📋 *Resumo - ${item.nome}*\nPlaca: ${item.placa}\n\n*Total a pagar (${periodo}):* R$ ${item.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n\n_Prime Group_`;
+    navigator.clipboard.writeText(msg).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    });
+  };
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
@@ -144,6 +174,41 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
         )}
       </Card>
       
+      <Card className="border-slate-800 bg-teal-950/20 border-teal-900/30">
+        <h3 className="text-sm font-black uppercase tracking-widest mb-2 text-teal-400">Resumo para WhatsApp — clique no nome ou na placa</h3>
+        <p className="text-[10px] text-slate-500 mb-4">Ao clicar, o texto com o total a pagar é copiado. Cole no WhatsApp e envie.</p>
+        <div className="space-y-2">
+          {resumoPorAgregado.length === 0 ? (
+            <div className="text-slate-500 text-sm py-4 text-center">Nenhum dado no período.</div>
+          ) : (
+            resumoPorAgregado.map((item) => (
+              <div
+                key={item.key}
+                className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-teal-900/50 transition-all"
+              >
+                <button
+                  type="button"
+                  onClick={() => copyResumoWhatsApp(item, item.key)}
+                  className="text-sm font-bold text-white hover:text-teal-400 transition-colors text-left"
+                >
+                  {item.nome}
+                </button>
+                <span className="text-slate-600">|</span>
+                <button
+                  type="button"
+                  onClick={() => copyResumoWhatsApp(item, item.key)}
+                  className="text-xs font-mono font-bold text-blue-400 hover:text-teal-400 transition-colors"
+                >
+                  {item.placa}
+                </button>
+                <span className="text-slate-500 text-xs ml-auto font-black">R$ {item.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} a pagar</span>
+                {copiedKey === item.key && <span className="text-[10px] font-bold text-emerald-500 uppercase">Copiado!</span>}
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
+
       <Card className="p-0 overflow-hidden border-slate-800 bg-slate-900/30">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -163,8 +228,22 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
                   <tr key={f.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
                     <td className="p-4 text-xs font-mono text-slate-400">{new Date(f.data).toLocaleDateString('pt-BR')}</td>
                     <td className="p-4">
-                      <div className="text-xs font-bold text-slate-200">{f.nomeAgregado}</div>
-                      <div className="text-[10px] font-mono text-blue-500 font-bold">{f.placa}</div>
+                      {(() => {
+                        const item = resumoPorAgregado.find(r => r.nome === (f.nomeAgregado || 'Sem nome') && r.placa === (f.placa || '—'));
+                        const key = item ? item.key : `${f.nomeAgregado}|${f.placa}`;
+                        const msgItem = item ?? { nome: f.nomeAgregado || 'Sem nome', placa: f.placa || '—', totalAPagar: Number(f.valorAgregado || 0) };
+                        return (
+                          <div className="flex flex-col gap-0.5">
+                            <button type="button" onClick={() => copyResumoWhatsApp(msgItem, key)} className="text-xs font-bold text-slate-200 hover:text-teal-400 text-left transition-colors">
+                              {f.nomeAgregado}
+                            </button>
+                            <button type="button" onClick={() => copyResumoWhatsApp(msgItem, key)} className="text-[10px] font-mono text-blue-500 font-bold hover:text-teal-400 text-left transition-colors">
+                              {f.placa}
+                            </button>
+                            {copiedKey === key && <span className="text-[9px] text-emerald-500 font-bold">Copiado!</span>}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="p-4 text-right text-xs text-emerald-400 font-bold">R$ {Number(f.valorFrete || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     <td className="p-4 text-right text-xs text-red-400 font-bold">R$ {Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
