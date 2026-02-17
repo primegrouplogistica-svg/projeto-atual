@@ -63,7 +63,7 @@ const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agreg
             <Input label="Nome do Agregado" value={nome} onChange={setNome} required placeholder="Ex: João Transportes" />
             <Input label="Placa do Veículo" value={placa} onChange={setPlaca} required placeholder="ABC-1234" />
             <div className="md:col-span-2 mt-4">
-              <BigButton onClick={() => {}} variant="success">CADASTRAR AGREGADO</BigButton>
+              <BigButton type="submit" onClick={() => {}} variant="success">CADASTRAR AGREGADO</BigButton>
             </div>
           </form>
         </Card>
