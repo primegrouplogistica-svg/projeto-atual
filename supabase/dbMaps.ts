@@ -183,36 +183,6 @@ export function mapMaintenanceToDb(m: any) {
   };
 }
 
-export function mapDailyRouteFromDb(row: any) {
-  if (!row) return null;
-  return {
-    id: row.id,
-    motoristaId: row.motorista_id,
-    ajudanteId: row.ajudante_id,
-    ajudanteNome: row.ajudante_nome,
-    vehicleId: row.vehicle_id,
-    placa: row.placa,
-    clienteId: row.cliente_id,
-    clienteNome: row.cliente_nome,
-    destino: row.destino,
-    oc: row.oc,
-    valorFrete: row.valor_frete != null ? Number(row.valor_frete) : undefined,
-    valorMotorista: row.valor_motorista != null ? Number(row.valor_motorista) : undefined,
-    valorAjudante: row.valor_ajudante != null ? Number(row.valor_ajudante) : undefined,
-    statusFinanceiro: row.status_financeiro,
-    adminFinanceiroId: row.admin_financeiro_id,
-    createdAt: row.created_at,
-    fotoFrente: row.foto_frente,
-    fotoLateralEsquerda: row.foto_lateral_esquerda,
-    fotoLateralDireita: row.foto_lateral_direita,
-    fotoTraseira: row.foto_traseira,
-    nivelOleo: row.nivel_oleo,
-    nivelAgua: row.nivel_agua,
-    avariaNova: row.avaria_nova === true,
-    avariaDescricao: row.avaria_descricao ?? undefined,
-    avariaFoto: row.avaria_foto ?? undefined
-  };
-}
 export function mapDailyRouteToDb(r: any) {
   return {
     id: r.id,
@@ -240,6 +210,36 @@ export function mapDailyRouteToDb(r: any) {
     avaria_nova: r.avariaNova === true ? true : null,
     avaria_descricao: r.avariaDescricao ?? null,
     avaria_foto: r.avariaFoto ?? null
+  };
+}
+export function mapDailyRouteToDb(r: any) {
+  return {
+    id: r.id,
+    motorista_id: r.motoristaId,
+    ajudante_id: r.ajudanteId ?? null,
+    ajudante_nome: r.ajudanteNome ?? null,
+    vehicle_id: r.vehicleId,
+    placa: r.placa,
+    cliente_id: r.clienteId,
+    cliente_nome: r.clienteNome ?? null,
+    destino: r.destino,
+    oc: r.oc,
+    valor_frete: r.valorFrete ?? 0,
+    valor_motorista: r.valorMotorista ?? 0,
+    valor_ajudante: r.valorAjudante ?? 0,
+    status_financeiro: r.statusFinanceiro ?? null,
+    admin_financeiro_id: r.adminFinanceiroId ?? null,
+    created_at: r.createdAt,
+    // não enviamos as fotos (base64) para o Supabase para evitar registros gigantes
+    foto_frente: null,
+    foto_lateral_esquerda: null,
+    foto_lateral_direita: null,
+    foto_traseira: null,
+    nivel_oleo: r.nivelOleo ?? null,
+    nivel_agua: r.nivelAgua ?? null,
+    avaria_nova: r.avariaNova === true ? true : null,
+    avaria_descricao: r.avariaDescricao ?? null,
+    avaria_foto: null
   };
 }
 
