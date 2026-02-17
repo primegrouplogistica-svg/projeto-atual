@@ -12,6 +12,7 @@ import { DriverLocationSender } from './components/DriverLocationSender';
 import { supabase, isSupabaseOnline } from './supabase';
 import { loadAllFromSupabase, syncAllToSupabase } from './supabase/sync';
 import { RefreshCw } from 'lucide-react';
+import AdminFuelingForm from './pages/AdminFuelingForm';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -349,7 +350,6 @@ const App: React.FC = () => {
   const AdminAgregadoFreight = React.lazy(() => import('./pages/AdminAgregadoFreight'));
   const AdminTollManagement = React.lazy(() => import('./pages/AdminTollManagement'));
   const AdminCreateDailyRoute = React.lazy(() => import('./pages/AdminCreateDailyRoute'));
-  const AdminFuelingForm = React.lazy(() => import('./pages/AdminFuelingForm'));
   const AdminPreventiveMaintenance = React.lazy(() => import('./pages/AdminPreventiveMaintenance'));
   const AdminAgregadoReport = React.lazy(() => import('./pages/AdminAgregadoReport'));
   const AdminMaintenanceHistory = React.lazy(() => import('./pages/AdminMaintenanceHistory'));
