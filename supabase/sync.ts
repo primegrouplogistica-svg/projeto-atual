@@ -83,9 +83,9 @@ export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<All
     if (tollsRes.error) throw tollsRes.error;
 
     return {
-      users: (usersRes.data ?? []).map(mapUserFromDb).filter(Boolean),
+      users: (usersRes.data ?? []).filter((row: any) => !row.excluido).map(mapUserFromDb).filter(Boolean),
       vehicles: (vehiclesRes.data ?? []).map(mapVehicleFromDb).filter(Boolean),
-      customers: (customersRes.data ?? []).map(mapCustomerFromDb).filter(Boolean),
+      customers: (customersRes.data ?? []).filter((row: any) => !row.excluido).map(mapCustomerFromDb).filter(Boolean),
       fuelings: (fuelingsRes.data ?? []).map(mapFuelingFromDb).filter(Boolean),
       maintenances: (maintenancesRes.data ?? []).map(mapMaintenanceFromDb).filter(Boolean),
       dailyRoutes: (dailyRoutesRes.data ?? []).map(mapDailyRouteFromDb).filter(Boolean),
@@ -121,9 +121,9 @@ export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData)
   }
 }
 
-/** Remove registro do Supabase para que não volte ao sincronizar */
+/** Soft delete: marca excluido=true (FK constraints impedem DELETE fisico em users/customers) */
 export async function deleteUserFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
-  const { error } = await supabase.from('users').delete().eq('id', id);
+  const { error } = await supabase.from('users').update({ excluido: true }).eq('id', id);
   if (error) console.error('deleteUserFromSupabase:', error);
 }
 
@@ -132,7 +132,8 @@ export async function deleteAgregadoFromSupabase(supabase: SupabaseClient, id: s
   if (error) console.error('deleteAgregadoFromSupabase:', error);
 }
 
+/** Soft delete: marca excluido=true (FK constraints impedem DELETE fisico) */
 export async function deleteCustomerFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
-  const { error } = await supabase.from('customers').delete().eq('id', id);
+  const { error } = await supabase.from('customers').update({ excluido: true }).eq('id', id);
   if (error) console.error('deleteCustomerFromSupabase:', error);
 }
