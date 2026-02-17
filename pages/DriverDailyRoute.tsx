@@ -60,8 +60,8 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
     nivelAgua
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!clienteId || !destino || !oc || !isChecklistComplete) return;
 
     const cliente = customers.find(c => c.id === clienteId);
@@ -290,7 +290,8 @@ const DriverDailyRoute: React.FC<DriverDailyRouteProps> = ({ session, user, cust
               </p>
             )}
             <button
-              type="submit"
+              type="button"
+              onClick={() => handleSubmit()}
               disabled={!clienteId || !destino || !oc || !isChecklistComplete}
               className={`relative w-full p-6 text-sm font-black uppercase tracking-widest rounded-2xl border-b-4 flex flex-col items-center justify-center gap-4 transition-all active:translate-y-1 active:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed ${isChecklistComplete ? 'bg-blue-700 hover:bg-blue-600 border-blue-600 text-white' : 'bg-slate-800 border-slate-700 text-slate-100'}`}
             >
