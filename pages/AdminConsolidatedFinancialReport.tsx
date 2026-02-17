@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { DailyRoute, RouteDeparture, Fueling, MaintenanceRequest, Toll, AgregadoFreight, FixedExpense, FuelingStatus, MaintenanceStatus, FinanceiroStatus, User, UserRole } from '../types';
 import { Card, Select } from '../components/UI';
 
@@ -55,6 +55,13 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
   const [mostrarResumoAgregadosPorPlaca, setMostrarResumoAgregadosPorPlaca] = useState(false);
   const [selectedPlacaAgregado, setSelectedPlacaAgregado] = useState('');
   const [copiedKeyAgregado, setCopiedKeyAgregado] = useState<string | null>(null);
+  const refResumoPorPlaca = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (mostrarResumoAgregadosPorPlaca && refResumoPorPlaca.current) {
+      refResumoPorPlaca.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [mostrarResumoAgregadosPorPlaca]);
 
   const safeNum = (v: any) => {
     const n = Number(v);
@@ -399,7 +406,8 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
   };
 
   const copiarRelatorioCategoria = async (categoriaLabel: string, valorTotal: number) => {
-    if (categoriaLabel === 'Agregados') {
+    const ehAgregados = categoriaLabel?.trim() === 'Agregados';
+    if (ehAgregados) {
       setMostrarResumoAgregadosPorPlaca(prev => !prev);
       return;
     }
@@ -603,7 +611,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
 
       <Card className="border-slate-800">
         <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-white">Resumo das despesas (período)</h3>
-        <p className="text-slate-500 text-xs mb-4">Clique na categoria para copiar relatório (datas, placas e valores) para o WhatsApp.</p>
+        <p className="text-slate-500 text-xs mb-4">Clique na categoria para copiar relatório. Em <strong className="text-teal-400">Agregados</strong>, clique para abrir o resumo por placa (selecione a placa e copie para WhatsApp).</p>
         {resumoDespesas.itens.length === 0 ? (
           <p className="text-slate-500 text-sm">Nenhuma despesa no período.</p>
         ) : (
@@ -614,12 +622,12 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
                   key={categoria}
                   type="button"
                   onClick={() => copiarRelatorioCategoria(categoria, valor)}
-                  className={`flex justify-between items-center py-3 px-4 rounded-xl bg-slate-950/50 border transition-all text-left gap-2 ${categoria === 'Agregados' ? 'border-teal-800/60 hover:border-teal-700 hover:bg-teal-950/30' : 'border-slate-800 hover:border-slate-600 hover:bg-slate-900/50'}`}
+                  className={`flex justify-between items-center py-3 px-4 rounded-xl bg-slate-950/50 border transition-all text-left gap-2 ${categoria?.trim() === 'Agregados' ? 'border-teal-800/60 hover:border-teal-700 hover:bg-teal-950/30' : 'border-slate-800 hover:border-slate-600 hover:bg-slate-900/50'}`}
                 >
-                  <span className="text-slate-300 font-medium text-sm truncate">{categoria === 'Agregados' ? 'Agregados — Resumo por placa' : categoria}</span>
+                  <span className="text-slate-300 font-medium text-sm truncate">{categoria?.trim() === 'Agregados' ? 'Agregados — Clique para resumo por placa' : categoria}</span>
                   <span className="text-red-400 font-black tabular-nums shrink-0">R$ {valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                  {categoria !== 'Agregados' && copiadoCategoria === categoria && <span className="text-[10px] text-emerald-500 font-bold shrink-0">Copiado!</span>}
-                  {categoria === 'Agregados' && mostrarResumoAgregadosPorPlaca && <span className="text-[10px] text-teal-400 font-bold shrink-0">▼ aberto</span>}
+                  {categoria?.trim() !== 'Agregados' && copiadoCategoria === categoria && <span className="text-[10px] text-emerald-500 font-bold shrink-0">Copiado!</span>}
+                  {categoria?.trim() === 'Agregados' && mostrarResumoAgregadosPorPlaca && <span className="text-[10px] text-teal-400 font-bold shrink-0">▼ aberto</span>}
                 </button>
               ))}
             </div>
@@ -632,7 +640,8 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
       </Card>
 
       {mostrarResumoAgregadosPorPlaca && (
-        <Card className="border-teal-900/40 bg-teal-950/20">
+        <div ref={refResumoPorPlaca}>
+          <Card className="border-teal-900/40 bg-teal-950/20">
           <h3 className="text-sm font-black uppercase tracking-widest mb-1 text-teal-400">Resumo por placa (Agregados)</h3>
           <p className="text-[10px] text-slate-500 mb-4">Selecione uma placa para ver o total a pagar, dias, OC e destino. Clique em &quot;Copiar para WhatsApp&quot; para enviar o resumo detalhado.</p>
           <div className="mb-4 max-w-xs">
@@ -690,7 +699,8 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
           ) : (
             <p className="text-slate-500 text-sm py-4">Nenhum frete no período para esta placa.</p>
           )}
-        </Card>
+          </Card>
+        </div>
       )}
 
       <Card className="border-slate-800">
