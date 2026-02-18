@@ -137,3 +137,24 @@ export async function deleteCustomerFromSupabase(supabase: SupabaseClient, id: s
   const { error } = await supabase.from('customers').update({ excluido: true }).eq('id', id);
   if (error) console.error('deleteCustomerFromSupabase:', error);
 }
+
+/** Remove do Supabase (central de pendências / histórico) */
+export async function deleteFuelingFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('fuelings').delete().eq('id', id);
+  if (error) console.error('deleteFuelingFromSupabase:', error);
+}
+
+export async function deleteMaintenanceFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('maintenance_requests').delete().eq('id', id);
+  if (error) console.error('deleteMaintenanceFromSupabase:', error);
+}
+
+export async function deleteDailyRouteFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('daily_routes').delete().eq('id', id);
+  if (error) console.error('deleteDailyRouteFromSupabase:', error);
+}
+
+export async function deleteRouteFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('route_departures').delete().eq('id', id);
+  if (error) console.error('deleteRouteFromSupabase:', error);
+}

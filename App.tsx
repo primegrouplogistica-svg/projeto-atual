@@ -10,7 +10,7 @@ import { Logo } from './components/UI';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DriverLocationSender } from './components/DriverLocationSender';
 import { supabase, isSupabaseOnline } from './supabase';
-import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase } from './supabase/sync';
+import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase, deleteFuelingFromSupabase, deleteMaintenanceFromSupabase, deleteDailyRouteFromSupabase, deleteRouteFromSupabase } from './supabase/sync';
 import { RefreshCw } from 'lucide-react';
 import AdminFuelingForm from './pages/AdminFuelingForm';
 
@@ -406,7 +406,7 @@ const App: React.FC = () => {
       case 'admin-dashboard':
         return <AdminDashboard fuelings={fuelings} maintenances={maintenances} vehicles={vehicles} fixedExpenses={fixedExpenses} dailyRoutes={dailyRoutes} routes={routes} agregadoFreights={agregadoFreights} tolls={tolls} onBack={() => navigate('operation')} />;
       case 'admin-pending':
-        return <AdminPending fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} vehicles={vehicles} users={users} currentUser={currentUser} onUpdateFueling={(id, up) => updateRecord(setFuelings, id, up)} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} onDeleteFueling={(id) => deleteRecord(setFuelings, id)} onDeleteMaintenance={(id) => deleteRecord(setMaintenances, id)} onDeleteDailyRoute={(id) => deleteRecord(setDailyRoutes, id)} onDeleteRoute={(id) => deleteRecord(setRoutes, id)} onBack={() => navigate('operation')} />;
+        return <AdminPending fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} vehicles={vehicles} users={users} currentUser={currentUser} onUpdateFueling={(id, up) => updateRecord(setFuelings, id, up)} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} onDeleteFueling={async (id) => { if (supabase) await deleteFuelingFromSupabase(supabase, id); deleteRecord(setFuelings, id); }} onDeleteMaintenance={async (id) => { if (supabase) await deleteMaintenanceFromSupabase(supabase, id); deleteRecord(setMaintenances, id); }} onDeleteDailyRoute={async (id) => { if (supabase) await deleteDailyRouteFromSupabase(supabase, id); deleteRecord(setDailyRoutes, id); }} onDeleteRoute={async (id) => { if (supabase) await deleteRouteFromSupabase(supabase, id); deleteRecord(setRoutes, id); }} onBack={() => navigate('operation')} />;
       case 'user-mgmt':
         return <UserManagement users={users} onSaveUser={onSaveUser} onDeleteUser={async (id) => { if (supabase) await deleteUserFromSupabase(supabase, id); setUsers(prev => prev.filter(u => u.id !== id)); }} onBack={() => navigate('operation')} />;
       case 'vehicle-mgmt':
@@ -432,7 +432,7 @@ const App: React.FC = () => {
       case 'admin-preventive':
         return <AdminPreventiveMaintenance vehicles={vehicles} currentUser={currentUser} onUpdateVehicle={(id, up) => updateRecord(setVehicles, id, up)} onAddMaintenance={(m) => saveRecord(setMaintenances, m)} onBack={() => navigate('operation')} />;
       case 'admin-maintenance-history':
-        return <AdminMaintenanceHistory maintenances={maintenances} users={users} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onDeleteMaintenance={(id) => deleteRecord(setMaintenances, id)} onBack={() => navigate('operation')} />;
+        return <AdminMaintenanceHistory maintenances={maintenances} users={users} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onDeleteMaintenance={async (id) => { if (supabase) await deleteMaintenanceFromSupabase(supabase, id); deleteRecord(setMaintenances, id); }} onBack={() => navigate('operation')} />;
       case 'admin-maintenance-done':
         return <AdminMaintenanceDone maintenances={maintenances} vehicles={vehicles} currentUser={currentUser} onAddMaintenance={(m) => saveRecord(setMaintenances, m)} onBack={() => navigate('operation')} />;
       case 'admin-tracking':
@@ -444,16 +444,16 @@ const App: React.FC = () => {
       case 'admin-payments-team':
         return <AdminTeamReport dailyRoutes={dailyRoutes} routes={routes} users={users} onBack={() => navigate('operation')} />;
       case 'admin-consolidated-finance':
-        return <AdminConsolidatedFinancialReport dailyRoutes={dailyRoutes} routes={routes} fuelings={fuelings} maintenances={maintenances} tolls={tolls} agregadoFreights={agregadoFreights} fixedExpenses={fixedExpenses} users={users} onBack={() => navigate('operation')} onDeleteMovement={(m) => {
+        return <AdminConsolidatedFinancialReport dailyRoutes={dailyRoutes} routes={routes} fuelings={fuelings} maintenances={maintenances} tolls={tolls} agregadoFreights={agregadoFreights} fixedExpenses={fixedExpenses} users={users} onBack={() => navigate('operation')} onDeleteMovement={async (m) => {
           const id = m.id;
           if (id.startsWith('route-motorista-') || id.startsWith('route-ajudante-')) { const routeId = id.replace('route-motorista-', '').replace('route-ajudante-', ''); updateRecord(setRoutes, routeId, { valorMotorista: 0, valorAjudante: 0 }); }
-          else if (id.startsWith('route-')) deleteRecord(setRoutes, id.replace('route-', ''));
+          else if (id.startsWith('route-')) { const rid = id.replace('route-', ''); if (supabase) await deleteRouteFromSupabase(supabase, rid); deleteRecord(setRoutes, rid); }
           else if (id.startsWith('daily-motorista-') || id.startsWith('daily-ajudante-')) { const dailyId = id.replace('daily-motorista-', '').replace('daily-ajudante-', ''); updateRecord(setDailyRoutes, dailyId, { valorMotorista: 0, valorAjudante: 0 }); }
-          else if (id.startsWith('daily-')) deleteRecord(setDailyRoutes, id.replace('daily-', ''));
+          else if (id.startsWith('daily-')) { const did = id.replace('daily-', ''); if (supabase) await deleteDailyRouteFromSupabase(supabase, did); deleteRecord(setDailyRoutes, did); }
           else if (id.startsWith('agr-p-')) updateRecord(setAgregadoFreights, id.replace('agr-p-', ''), { valorAgregado: 0 });
           else if (id.startsWith('agr-')) deleteRecord(setAgregadoFreights, id.replace('agr-', ''));
-          else if (id.startsWith('fuel-')) deleteRecord(setFuelings, id.replace('fuel-', ''));
-          else if (id.startsWith('maint-')) deleteRecord(setMaintenances, id.replace('maint-', ''));
+          else if (id.startsWith('fuel-')) { const fid = id.replace('fuel-', ''); if (supabase) await deleteFuelingFromSupabase(supabase, fid); deleteRecord(setFuelings, fid); }
+          else if (id.startsWith('maint-')) { const mid = id.replace('maint-', ''); if (supabase) await deleteMaintenanceFromSupabase(supabase, mid); deleteRecord(setMaintenances, mid); }
           else if (id.startsWith('toll-')) deleteRecord(setTolls, id.replace('toll-', ''));
           else if (id.startsWith('fix-')) deleteRecord(setFixedExpenses, id.replace('fix-', ''));
         }} />;
