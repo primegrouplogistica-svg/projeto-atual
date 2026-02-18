@@ -10,7 +10,7 @@ import { Logo } from './components/UI';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DriverLocationSender } from './components/DriverLocationSender';
 import { supabase, isSupabaseOnline } from './supabase';
-import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase, deleteFuelingFromSupabase, deleteMaintenanceFromSupabase, deleteDailyRouteFromSupabase, deleteRouteFromSupabase } from './supabase/sync';
+import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase, deleteFuelingFromSupabase, deleteMaintenanceFromSupabase, deleteDailyRouteFromSupabase, deleteRouteFromSupabase, deleteTollFromSupabase, deleteFixedExpenseFromSupabase, deleteAgregadoFreightFromSupabase } from './supabase/sync';
 import { RefreshCw } from 'lucide-react';
 import AdminFuelingForm from './pages/AdminFuelingForm';
 
@@ -451,11 +451,11 @@ const App: React.FC = () => {
           else if (id.startsWith('daily-motorista-') || id.startsWith('daily-ajudante-')) { const dailyId = id.replace('daily-motorista-', '').replace('daily-ajudante-', ''); updateRecord(setDailyRoutes, dailyId, { valorMotorista: 0, valorAjudante: 0 }); }
           else if (id.startsWith('daily-')) { const did = id.replace('daily-', ''); if (supabase) await deleteDailyRouteFromSupabase(supabase, did); deleteRecord(setDailyRoutes, did); }
           else if (id.startsWith('agr-p-')) updateRecord(setAgregadoFreights, id.replace('agr-p-', ''), { valorAgregado: 0 });
-          else if (id.startsWith('agr-')) deleteRecord(setAgregadoFreights, id.replace('agr-', ''));
+          else if (id.startsWith('agr-')) { const aid = id.replace('agr-', ''); if (supabase) await deleteAgregadoFreightFromSupabase(supabase, aid); deleteRecord(setAgregadoFreights, aid); }
           else if (id.startsWith('fuel-')) { const fid = id.replace('fuel-', ''); if (supabase) await deleteFuelingFromSupabase(supabase, fid); deleteRecord(setFuelings, fid); }
           else if (id.startsWith('maint-')) { const mid = id.replace('maint-', ''); if (supabase) await deleteMaintenanceFromSupabase(supabase, mid); deleteRecord(setMaintenances, mid); }
-          else if (id.startsWith('toll-')) deleteRecord(setTolls, id.replace('toll-', ''));
-          else if (id.startsWith('fix-')) deleteRecord(setFixedExpenses, id.replace('fix-', ''));
+          else if (id.startsWith('toll-')) { const tid = id.replace('toll-', ''); if (supabase) await deleteTollFromSupabase(supabase, tid); deleteRecord(setTolls, tid); }
+          else if (id.startsWith('fix-')) { const fid = id.replace('fix-', ''); if (supabase) await deleteFixedExpenseFromSupabase(supabase, fid); deleteRecord(setFixedExpenses, fid); }
         }} />;
       case 'admin-vehicle-report':
         return <AdminVehicleReport fuelings={fuelings} maintenances={maintenances} vehicles={vehicles} dailyRoutes={dailyRoutes} routes={routes} tolls={tolls} fixedExpenses={fixedExpenses} onBack={() => navigate('operation')} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} />;

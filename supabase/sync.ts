@@ -158,3 +158,18 @@ export async function deleteRouteFromSupabase(supabase: SupabaseClient, id: stri
   const { error } = await supabase.from('route_departures').delete().eq('id', id);
   if (error) console.error('deleteRouteFromSupabase:', error);
 }
+
+export async function deleteTollFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('tolls').delete().eq('id', id);
+  if (error) console.error('deleteTollFromSupabase:', error);
+}
+
+export async function deleteFixedExpenseFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('fixed_expenses').delete().eq('id', id);
+  if (error) console.error('deleteFixedExpenseFromSupabase:', error);
+}
+
+export async function deleteAgregadoFreightFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('agregado_freights').delete().eq('id', id);
+  if (error) console.error('deleteAgregadoFreightFromSupabase:', error);
+}

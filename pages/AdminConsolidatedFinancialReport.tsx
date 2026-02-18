@@ -52,6 +52,8 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
   const [copiadoPessoa, setCopiadoPessoa] = useState<string | null>(null);
   const [copiadoCategoria, setCopiadoCategoria] = useState<string | null>(null);
   const [copiadoReceita, setCopiadoReceita] = useState<string | null>(null);
+  const [abaMovimentos, setAbaMovimentos] = useState<'lista' | 'excluir'>('lista');
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const safeNum = (v: any) => {
     const n = Number(v);
     return isNaN(n) ? 0 : n;
@@ -721,10 +723,58 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
       {/* Lista de entradas e saídas */}
       <Card className="bg-slate-900/40 border-slate-800 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <div className="text-xs font-bold uppercase text-slate-400">
-            Movimentos ({movimentosFiltrados.length}) — use o período acima para definir o intervalo de datas
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex rounded-lg overflow-hidden border border-slate-700">
+              <button
+                type="button"
+                onClick={() => { setAbaMovimentos('lista'); setSelecionados(new Set()); }}
+                className={`px-4 py-2 text-xs font-bold uppercase transition-colors ${abaMovimentos === 'lista' ? 'bg-slate-700 text-white' : 'bg-slate-900/50 text-slate-500 hover:text-slate-300'}`}
+              >
+                Movimentos
+              </button>
+              {onDeleteMovement && (
+                <button
+                  type="button"
+                  onClick={() => setAbaMovimentos('excluir')}
+                  className={`px-4 py-2 text-xs font-bold uppercase transition-colors ${abaMovimentos === 'excluir' ? 'bg-red-900/60 text-red-400' : 'bg-slate-900/50 text-slate-500 hover:text-slate-300'}`}
+                >
+                  Excluir lançamentos
+                </button>
+              )}
+            </div>
+            <span className="text-xs font-bold uppercase text-slate-400">
+              ({movimentosFiltrados.length}) — use o período acima para definir o intervalo
+            </span>
           </div>
           <div className="flex items-center gap-2 no-print">
+            {abaMovimentos === 'excluir' && onDeleteMovement && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSelecionados(selecionados.size === movimentosFiltrados.length ? new Set() : new Set(movimentosFiltrados.map(m => m.id)))}
+                  className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl font-bold border border-slate-600 text-xs uppercase text-white"
+                >
+                  {selecionados.size === movimentosFiltrados.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selecionados.size === 0) return alert('Selecione ao menos um lançamento para excluir.');
+                    if (!window.confirm(`Excluir ${selecionados.size} lançamento(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+                    selecionados.forEach(id => {
+                      const m = movimentosFiltrados.find(x => x.id === id);
+                      if (m) onDeleteMovement(m);
+                    });
+                    setSelecionados(new Set());
+                    setAbaMovimentos('lista');
+                  }}
+                  disabled={selecionados.size === 0}
+                  className="bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-xl font-bold border border-red-600 text-xs uppercase text-white"
+                >
+                  Excluir selecionados ({selecionados.size})
+                </button>
+              </>
+            )}
             <button
               type="button"
               onClick={exportarPlanilha}
@@ -748,6 +798,16 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-800 text-left text-slate-400 uppercase tracking-wider text-[10px] font-black">
+                {abaMovimentos === 'excluir' && onDeleteMovement && (
+                  <th className="py-3 px-2 w-12 text-center">
+                    <input
+                      type="checkbox"
+                      checked={movimentosFiltrados.length > 0 && selecionados.size === movimentosFiltrados.length}
+                      onChange={(e) => setSelecionados(e.target.checked ? new Set(movimentosFiltrados.map(m => m.id)) : new Set())}
+                      className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-red-600 focus:ring-red-500"
+                    />
+                  </th>
+                )}
                 <th className="py-3 px-2">Data</th>
                 <th className="py-3 px-2">Tipo</th>
                 <th className="py-3 px-2">Categoria</th>
@@ -762,13 +822,28 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
             <tbody>
               {movimentosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan={onDeleteMovement ? 9 : 8} className="py-8 text-center text-slate-500">
+                  <td colSpan={9} className="py-8 text-center text-slate-500">
                     Nenhum movimento no período. Ajuste as datas ou os filtros.
                   </td>
                 </tr>
               ) : (
                 movimentosFiltrados.map((m) => (
-                  <tr key={m.id} className="border-b border-slate-800/60 hover:bg-slate-800/30">
+                  <tr key={m.id} className={`border-b border-slate-800/60 hover:bg-slate-800/30 ${abaMovimentos === 'excluir' && selecionados.has(m.id) ? 'bg-red-950/20' : ''}`}>
+                    {abaMovimentos === 'excluir' && onDeleteMovement && (
+                      <td className="py-2.5 px-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selecionados.has(m.id)}
+                          onChange={(e) => {
+                            const next = new Set(selecionados);
+                            if (e.target.checked) next.add(m.id);
+                            else next.delete(m.id);
+                            setSelecionados(next);
+                          }}
+                          className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-red-600 focus:ring-red-500"
+                        />
+                      </td>
+                    )}
                     <td className="py-2.5 px-2 text-slate-300 whitespace-nowrap">
                       {new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                     </td>
@@ -785,7 +860,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
                     <td className={`py-2.5 px-2 text-right font-bold whitespace-nowrap ${m.tipo === 'entrada' ? 'text-emerald-400' : 'text-red-400'}`}>
                       {m.tipo === 'entrada' ? '+' : '-'} R$ {m.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
-                    {onDeleteMovement && (
+                    {onDeleteMovement && abaMovimentos === 'lista' && (
                       <td className="py-2.5 px-2 text-center">
                         <button
                           type="button"
