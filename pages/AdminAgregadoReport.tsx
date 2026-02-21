@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { AgregadoFreight } from '../types';
 import { Card, Input, Select } from '../components/UI';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { formatDateBr, parseDateLocal } from '../utils/date';
 
 interface AdminAgregadoReportProps {
   freights: AgregadoFreight[];
@@ -20,12 +21,12 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
   }, [freights]);
 
   const filtered = useMemo(() => {
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    const start = startDate ? parseDateLocal(startDate) : null;
+    const end = endDate ? parseDateLocal(endDate) : null;
     if (end) end.setHours(23, 59, 59, 999);
 
     return freights.filter(f => {
-      const date = new Date(f.data);
+      const date = parseDateLocal(f.data);
       const matchesDate = (!start || date >= start) && (!end || date <= end);
       const matchesPlaca = !selectedPlaca || f.placa === selectedPlaca;
       return matchesDate && matchesPlaca;
@@ -116,7 +117,7 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
           : 'todo o período';
     let msg = `📋 *Resumo - ${resumoPlacaSelecionada.nome}*\nPlaca: ${resumoPlacaSelecionada.placa}\nPeríodo: ${periodo}\n\n`;
     freightsPorPlaca.forEach(f => {
-      const data = new Date(f.data).toLocaleDateString('pt-BR');
+      const data = formatDateBr(f.data);
       const oc = f.oc || '—';
       const dest = f.destino || '—';
       const valor = Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
@@ -181,7 +182,7 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
                   <tbody>
                     {freightsPorPlaca.map(f => (
                       <tr key={f.id} className="border-t border-slate-800 hover:bg-slate-800/50">
-                        <td className="p-3 font-mono text-slate-300">{new Date(f.data).toLocaleDateString('pt-BR')}</td>
+                        <td className="p-3 font-mono text-slate-300">{formatDateBr(f.data)}</td>
                         <td className="p-3 font-bold text-slate-200">{f.oc || '—'}</td>
                         <td className="p-3 text-slate-400">{f.destino || '—'}</td>
                         <td className="p-3 text-right font-black text-red-400">R$ {Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
@@ -314,7 +315,7 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
                 const saldo = Number(f.valorFrete || 0) - Number(f.valorAgregado || 0);
                 return (
                   <tr key={f.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
-                    <td className="p-4 text-xs font-mono text-slate-400">{new Date(f.data).toLocaleDateString('pt-BR')}</td>
+                    <td className="p-4 text-xs font-mono text-slate-400">{formatDateBr(f.data)}</td>
                     <td className="p-4">
                       {(() => {
                         const item = resumoPorAgregado.find(r => r.nome === (f.nomeAgregado || 'Sem nome') && r.placa === (f.placa || '—'));

@@ -3,6 +3,7 @@ import { Fueling, MaintenanceRequest, Vehicle, FuelingStatus, FixedExpense, Dail
 import { Card } from '../components/UI';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Activity, Truck, CreditCard, Package } from 'lucide-react';
+import { parseDateLocal } from '../utils/date';
 
 interface AdminDashboardProps {
   fuelings: Fueling[];
@@ -48,13 +49,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       return isNaN(n) ? 0 : n;
     };
 
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    const start = startDate ? parseDateLocal(startDate) : null;
+    const end = endDate ? parseDateLocal(endDate) : null;
     if (end) end.setHours(23, 59, 59, 999);
 
     const filterDate = (d: string) => {
       if (!start || !end) return true;
-      const date = new Date(d);
+      const date = parseDateLocal(d);
       return date >= start && date <= end;
     };
 

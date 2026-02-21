@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AgregadoFreight, Agregado } from '../types';
 import { Card, Input, BigButton, Select } from '../components/UI';
+import { todayLocalDateInput } from '../utils/date';
 
 interface AdminAgregadoFreightProps {
   agregados: Agregado[];
@@ -14,7 +15,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const [placa, setPlaca] = useState('');
   const [valorFrete, setValorFrete] = useState('');
   const [valorAgregado, setValorAgregado] = useState('');
-  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [data, setData] = useState(todayLocalDateInput());
   const [oc, setOc] = useState('');
 
   // Auto-fill placa when agregado is selected

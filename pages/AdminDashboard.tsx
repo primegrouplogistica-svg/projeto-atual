@@ -3,6 +3,7 @@ import { Fueling, MaintenanceRequest, Vehicle, FuelingStatus, FixedExpense, Dail
 import { Card, Input, Select } from '../components/UI';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Activity, Truck, CreditCard, Package } from 'lucide-react';
+import { formatDateBr, parseDateLocal } from '../utils/date';
 
 interface AdminDashboardProps {
   fuelings: Fueling[];
@@ -56,8 +57,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       return isNaN(n) ? 0 : n;
     };
 
-    let start = startDate ? new Date(startDate) : null;
-    let end = endDate ? new Date(endDate) : null;
+    let start = startDate ? parseDateLocal(startDate) : null;
+    let end = endDate ? parseDateLocal(endDate) : null;
     if (anoSelecionado) {
       start = new Date(`${anoSelecionado}-01-01`);
       end = new Date(`${anoSelecionado}-12-31`);
@@ -66,7 +67,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     const filterDate = (d: string) => {
       if (!start || !end) return true;
-      const date = new Date(d);
+      const date = parseDateLocal(d);
       return date >= start && date <= end;
     };
 
@@ -125,8 +126,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   /** Agregação por mês ou ano para relatório e gráfico de evolução */
   const desempenhoPorPeriodo = useMemo(() => {
-    let start = startDate ? new Date(startDate) : null;
-    let end = endDate ? new Date(endDate) : null;
+    let start = startDate ? parseDateLocal(startDate) : null;
+    let end = endDate ? parseDateLocal(endDate) : null;
     if (anoSelecionado) {
       start = new Date(`${anoSelecionado}-01-01`);
       end = new Date(`${anoSelecionado}-12-31`);
@@ -135,7 +136,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const inRange = (dateStr: string) => {
       if (!dateStr) return false;
       if (!start || !end) return true;
-      const d = new Date(dateStr);
+      const d = parseDateLocal(dateStr);
       return d >= start && d <= end;
     };
     const compStart = start ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}` : '';
@@ -146,7 +147,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const anos = new Set<string>();
     const addPeriodo = (dateStr: string) => {
       if (!dateStr || !inRange(dateStr)) return;
-      const d = new Date(dateStr);
+      const d = parseDateLocal(dateStr);
       meses.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
       anos.add(String(d.getFullYear()));
     };
@@ -173,7 +174,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const isAno = agrupamento === 'ano';
       const filterByPeriodo = (dateStr: string) => {
         if (!dateStr || !inRange(dateStr)) return false;
-        const d = new Date(dateStr);
+        const d = parseDateLocal(dateStr);
         if (isAno) return String(d.getFullYear()) === p;
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === p;
       };

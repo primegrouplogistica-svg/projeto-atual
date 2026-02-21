@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { DailyRoute, RouteDeparture, Fueling, MaintenanceRequest, Toll, AgregadoFreight, FixedExpense, FuelingStatus, MaintenanceStatus, FinanceiroStatus, User, UserRole } from '../types';
 import { Card } from '../components/UI';
+import { formatDateBr, parseDateLocal } from '../utils/date';
 
 type TipoFiltro = 'todos' | 'entradas' | 'saidas';
 type PapelEquipeFiltro = 'todos' | 'motorista' | 'ajudante';
@@ -66,7 +67,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
 
     const filterDate = (d: string) => {
       if (!start || !end) return true;
-      const date = new Date(d);
+      const date = parseDateLocal(d);
       return date >= start && date <= end;
     };
 
@@ -150,7 +151,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
     const totalRevenue = list.filter(m => m.tipo === 'entrada').reduce((s, m) => s + m.valor, 0);
     const totalExpense = list.filter(m => m.tipo === 'saida').reduce((s, m) => s + m.valor, 0);
 
-    list.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+    list.sort((a, b) => parseDateLocal(b.data).getTime() - parseDateLocal(a.data).getTime());
 
     return {
       summary: { totalRevenue, totalExpense },
@@ -279,7 +280,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
 
   const profit = Number(summary.totalRevenue) - Number(summary.totalExpense);
 
-  const formatDataExport = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const formatDataExport = (d: string) => formatDateBr(d);
   const formatValor = (v: number, tipo: 'entrada' | 'saida') => `${tipo === 'entrada' ? '+' : '-'} R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
   const escapeCsv = (val: string) => {
@@ -320,7 +321,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
 
   const copiarRelatorioReceitaEmpresa = async (empresa: string, valorTotal: number) => {
     const linhas = movimentos.filter(m => m.tipo === 'entrada' && m.categoria !== 'Frete agregado' && (m.empresa?.trim() || '(Sem empresa)') === empresa);
-    linhas.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    linhas.sort((a, b) => parseDateLocal(a.data).getTime() - parseDateLocal(b.data).getTime());
     const periodo = startDate && endDate ? `${startDate} a ${endDate}` : 'Todo o período';
     let text = `📋 *Receitas - ${empresa}*\n`;
     text += `Período: ${periodo}\n\n`;
@@ -337,7 +338,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
 
   const copiarRelatorioReceitaPlaca = async (placa: string, valorTotal: number) => {
     const linhas = movimentos.filter(m => m.tipo === 'entrada' && m.categoria !== 'Frete agregado' && (m.placa?.trim() || '(Sem placa)') === placa);
-    linhas.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    linhas.sort((a, b) => parseDateLocal(a.data).getTime() - parseDateLocal(b.data).getTime());
     const periodo = startDate && endDate ? `${startDate} a ${endDate}` : 'Todo o período';
     let text = `📋 *Receitas - Placa ${placa}*\n`;
     text += `Período: ${periodo}\n\n`;
@@ -369,7 +370,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
   const copiarRelatorioCategoria = async (categoriaLabel: string, valorTotal: number) => {
     const cats = categoriasParaFiltro(categoriaLabel);
     const linhas = movimentos.filter(m => m.tipo === 'saida' && cats.includes(m.categoria));
-    linhas.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    linhas.sort((a, b) => parseDateLocal(a.data).getTime() - parseDateLocal(b.data).getTime());
     const periodo = startDate && endDate ? `${startDate} a ${endDate}` : 'Todo o período';
     let text = `📋 *Relatório - ${categoriaLabel}*\n`;
     text += `Período: ${periodo}\n\n`;
@@ -390,7 +391,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
       if (tipo === 'motorista') return (m.papelEquipe === 'motorista' || m.categoria === 'Equipe (Motorista)') && m.motoristaId === id;
       return (m.papelEquipe === 'ajudante' || m.categoria === 'Equipe (Ajudante)') && m.ajudanteId === id;
     });
-    linhas.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    linhas.sort((a, b) => parseDateLocal(a.data).getTime() - parseDateLocal(b.data).getTime());
     const periodo = startDate && endDate ? `${startDate} a ${endDate}` : 'Todo o período';
     const titulo = tipo === 'motorista' ? 'Motorista' : 'Ajudante';
     let text = `📋 *Relatório - ${nome} (${titulo})*\n`;
@@ -845,7 +846,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
                       </td>
                     )}
                     <td className="py-2.5 px-2 text-slate-300 whitespace-nowrap">
-                      {new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      {formatDateBr(m.data)}
                     </td>
                     <td className="py-2.5 px-2">
                       <span className={m.tipo === 'entrada' ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
