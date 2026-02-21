@@ -375,6 +375,19 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
     text += `Período: ${periodo}\n\n`;
     text += `Receita: R$ ${lucroAgregados.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
     text += `Custo: R$ ${lucroAgregados.custo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
+    if (modo === 'antonio') {
+      const linhas = movimentos
+        .filter(m => m.tipo === 'entrada' && m.categoria === 'Frete agregado')
+        .sort((a, b) => parseDateLocal(a.data).getTime() - parseDateLocal(b.data).getTime());
+      if (linhas.length > 0) {
+        text += `\nDetalhamento (agregados):\n`;
+        linhas.forEach(m => {
+          const placa = m.placa ?? '-';
+          const origem = m.descricao || m.empresa || 'Agregado';
+          text += `${formatDataExport(m.data)} | ${placa} | ${origem} | R$ ${m.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
+        });
+      }
+    }
     text += `*Lucro: R$ ${lucroAgregados.lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*`;
     try {
       await navigator.clipboard.writeText(text);

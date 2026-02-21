@@ -268,13 +268,30 @@ const App: React.FC = () => {
       });
       return Array.from(byId.values());
     };
+    const mergeUsers = (prev: User[], incoming: User[]) => {
+      const byId = new Map<string, User>();
+      uniqById(incoming).forEach((item) => {
+        if (item?.id) byId.set(item.id, item);
+      });
+      prev.forEach((item) => {
+        if (!item?.id) return;
+        const existing = byId.get(item.id);
+        if (!existing) {
+          byId.set(item.id, item);
+          return;
+        }
+        const equipeTipo = existing.equipeTipo ?? item.equipeTipo;
+        byId.set(item.id, { ...existing, equipeTipo });
+      });
+      return Array.from(byId.values());
+    };
     const supabaseVazio =
       !data.users.length && !data.vehicles.length && !data.customers.length &&
       !data.fuelings.length && !data.maintenances.length && !data.routes.length &&
       !data.dailyRoutes.length && !data.fixedExpenses.length && !data.agregados.length &&
       !data.agregadoFreights.length && !data.tolls.length;
     if (!supabaseVazio) {
-      setUsers(data.users);
+      setUsers((prev) => mergeUsers(prev, data.users));
       setVehicles(data.vehicles);
       setCustomers(data.customers);
       setFuelings(data.fuelings);

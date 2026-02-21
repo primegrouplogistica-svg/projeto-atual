@@ -5,6 +5,7 @@
 
 export function mapUserFromDb(row: any) {
   if (!row) return null;
+  const hasEquipe = Object.prototype.hasOwnProperty.call(row, 'equipe_tipo');
   return {
     id: row.id,
     nome: row.nome,
@@ -13,7 +14,7 @@ export function mapUserFromDb(row: any) {
     perfil: row.perfil,
     ativo: row.ativo ?? true,
     permissoes: row.permissoes ?? [],
-    equipeTipo: row.equipe_tipo ?? 'geral'
+    equipeTipo: hasEquipe ? (row.equipe_tipo ?? 'geral') : undefined
   };
 }
 
