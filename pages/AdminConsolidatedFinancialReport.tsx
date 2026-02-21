@@ -37,10 +37,11 @@ interface AdminConsolidatedFinancialReportProps {
   onDeleteMovement?: (movimento: Movimento) => void;
   title?: string;
   placasInfo?: string[];
+  modo?: 'geral' | 'antonio';
 }
 
 const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialReportProps> = ({
-  dailyRoutes, routes, fuelings, maintenances, tolls, agregadoFreights, fixedExpenses, users, onBack, onDeleteMovement, title, placasInfo
+  dailyRoutes, routes, fuelings, maintenances, tolls, agregadoFreights, fixedExpenses, users, onBack, onDeleteMovement, title, placasInfo, modo = 'geral'
 }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -99,7 +100,7 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
     agregadoFreights
       .filter(r => filterDate(r.data))
       .forEach(r => {
-        const v = safeNum(r.valorFrete);
+        const v = modo === 'antonio' ? safeNum(r.valorAgregado) : safeNum(r.valorFrete);
         if (v > 0) list.push({ id: `agr-${r.id}`, data: r.data, tipo: 'entrada', categoria: 'Frete agregado', descricao: `${r.nomeAgregado} — OC ${r.oc} — ${r.placa}`, valor: v, placa: r.placa, empresa: r.nomeAgregado || 'Agregado' });
       });
 
@@ -140,12 +141,14 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
         if (vm > 0) list.push({ id: `daily-motorista-${r.id}`, data: r.createdAt, tipo: 'saida', categoria: 'Equipe (Motorista)', descricao: `Motorista — ${descBase}`, valor: vm, motoristaId: r.motoristaId, motoristaNome: motoristaNome || undefined, papelEquipe: 'motorista', placa: r.placa });
         if (va > 0) list.push({ id: `daily-ajudante-${r.id}`, data: r.createdAt, tipo: 'saida', categoria: 'Equipe (Ajudante)', descricao: `Ajudante — ${descBase}`, valor: va, ajudanteId: r.ajudanteId, ajudanteNome: ajudanteNome || undefined, papelEquipe: 'ajudante', placa: r.placa });
       });
-    agregadoFreights
-      .filter(r => filterDate(r.data))
-      .forEach(r => {
-        const v = safeNum(r.valorAgregado);
-        if (v > 0) list.push({ id: `agr-p-${r.id}`, data: r.data, tipo: 'saida', categoria: 'Agregados', descricao: `${r.nomeAgregado} — OC ${r.oc}`, valor: v, placa: r.placa });
-      });
+    if (modo !== 'antonio') {
+      agregadoFreights
+        .filter(r => filterDate(r.data))
+        .forEach(r => {
+          const v = safeNum(r.valorAgregado);
+          if (v > 0) list.push({ id: `agr-p-${r.id}`, data: r.data, tipo: 'saida', categoria: 'Agregados', descricao: `${r.nomeAgregado} — OC ${r.oc}`, valor: v, placa: r.placa });
+        });
+    }
     fixedExpenses
       .filter(e => filterDate((e.dataCompetencia || e.createdAt.slice(0, 7)) + '-01'))
       .forEach(e => list.push({ id: `fix-${e.id}`, data: (e.dataCompetencia || e.createdAt.slice(0, 7)) + '-01', tipo: 'saida', categoria: 'Despesa fixa', descricao: `${e.categoria}: ${e.descricao}`, valor: safeNum(e.valor) }));
