@@ -16,6 +16,8 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const [placa, setPlaca] = useState('');
   const [valorFrete, setValorFrete] = useState('');
   const [valorAgregado, setValorAgregado] = useState('');
+  const [valorMotorista, setValorMotorista] = useState('');
+  const [valorAjudante, setValorAjudante] = useState('');
   const [data, setData] = useState(todayLocalDateInput());
   const [oc, setOc] = useState('');
   const [rota, setRota] = useState('');
@@ -44,6 +46,8 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
     if (!isAntonio) {
       setMotoristaId('');
       setAjudanteId('');
+      setValorMotorista('');
+      setValorAjudante('');
     }
   }, [selectedAgregado, isAntonio]);
 
@@ -63,7 +67,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
-    if (isAntonio && (!motoristaId || !ajudanteId)) {
+    if (isAntonio && (!motoristaId || !ajudanteId || !valorMotorista || !valorAjudante)) {
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
@@ -83,6 +87,8 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       oc,
       rota,
       conta,
+      valorMotorista: valorMotorista ? Number(valorMotorista) : undefined,
+      valorAjudante: valorAjudante ? Number(valorAjudante) : undefined,
       motoristaId: motoristaId || undefined,
       ajudanteId: ajudanteId || undefined,
       motoristaNome: motoristaNome || undefined,
@@ -163,6 +169,22 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
             />
             {isAntonio && (
               <>
+                <Input
+                  label="Valor Motorista"
+                  type="number"
+                  value={valorMotorista}
+                  onChange={setValorMotorista}
+                  required
+                  placeholder="0.00"
+                />
+                <Input
+                  label="Valor Ajudante"
+                  type="number"
+                  value={valorAjudante}
+                  onChange={setValorAjudante}
+                  required
+                  placeholder="0.00"
+                />
                 <Select
                   label="Motorista"
                   value={motoristaId}
@@ -219,7 +241,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               type="submit"
               onClick={() => {}}
               variant="primary" 
-              disabled={isSubmitting || !agregadoId || !valorFrete || !valorAgregado || !oc || !rota || (isAntonio && (!motoristaId || !ajudanteId))}
+              disabled={isSubmitting || !agregadoId || !valorFrete || !valorAgregado || !oc || !rota || (isAntonio && (!motoristaId || !ajudanteId || !valorMotorista || !valorAjudante))}
             >
               CONFIRMAR LANÇAMENTO
             </BigButton>

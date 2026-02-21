@@ -95,6 +95,8 @@ export interface AgregadoFreight {
   rota?: string;
   /** Conta de faturamento (separação Antonio) */
   conta?: 'geral' | 'antonio';
+  valorMotorista?: number;
+  valorAjudante?: number;
   motoristaId?: string;
   ajudanteId?: string;
   motoristaNome?: string;

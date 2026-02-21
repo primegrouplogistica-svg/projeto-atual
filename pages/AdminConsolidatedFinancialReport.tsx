@@ -141,6 +141,17 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
         if (vm > 0) list.push({ id: `daily-motorista-${r.id}`, data: r.createdAt, tipo: 'saida', categoria: 'Equipe (Motorista)', descricao: `Motorista — ${descBase}`, valor: vm, motoristaId: r.motoristaId, motoristaNome: motoristaNome || undefined, papelEquipe: 'motorista', placa: r.placa });
         if (va > 0) list.push({ id: `daily-ajudante-${r.id}`, data: r.createdAt, tipo: 'saida', categoria: 'Equipe (Ajudante)', descricao: `Ajudante — ${descBase}`, valor: va, ajudanteId: r.ajudanteId, ajudanteNome: ajudanteNome || undefined, papelEquipe: 'ajudante', placa: r.placa });
       });
+    if (modo === 'antonio') {
+      agregadoFreights
+        .filter(r => filterDate(r.data))
+        .forEach(r => {
+          const vm = safeNum(r.valorMotorista);
+          const va = safeNum(r.valorAjudante);
+          const descBase = `Agregado ${r.nomeAgregado || ''} OC ${r.oc}`;
+          if (vm > 0) list.push({ id: `agr-motorista-${r.id}`, data: r.data, tipo: 'saida', categoria: 'Equipe (Motorista)', descricao: `Motorista — ${descBase}`, valor: vm, motoristaId: r.motoristaId, motoristaNome: r.motoristaNome || undefined, papelEquipe: 'motorista', placa: r.placa });
+          if (va > 0) list.push({ id: `agr-ajudante-${r.id}`, data: r.data, tipo: 'saida', categoria: 'Equipe (Ajudante)', descricao: `Ajudante — ${descBase}`, valor: va, ajudanteId: r.ajudanteId, ajudanteNome: r.ajudanteNome || undefined, papelEquipe: 'ajudante', placa: r.placa });
+        });
+    }
     if (modo !== 'antonio') {
       agregadoFreights
         .filter(r => filterDate(r.data))
