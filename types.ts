@@ -137,20 +137,6 @@ export interface Ticket {
   createdAt: string;
 }
 
-export interface AgregadoSaida {
-  id: string;
-  placa: string;
-  oc: string;
-  destino: string;
-  data: string;
-  status: ApprovalStatus;
-  createdById: string;
-  createdByNome?: string;
-  adminId?: string;
-  approvedAt?: string;
-  motivoRejeicao?: string;
-  createdAt: string;
-}
 
 export interface PreventiveTask {
   id: string;

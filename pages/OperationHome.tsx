@@ -1,6 +1,6 @@
 
 import React, { useMemo, useEffect, useRef } from 'react';
-import { User, UserSession, UserRole, Fueling, MaintenanceRequest, DailyRoute, RouteDeparture, FuelingStatus, MaintenanceStatus, FinanceiroStatus, Ticket, AgregadoSaida, ApprovalStatus } from '../types';
+import { User, UserSession, UserRole, Fueling, MaintenanceRequest, DailyRoute, RouteDeparture, FuelingStatus, MaintenanceStatus, FinanceiroStatus, Ticket, ApprovalStatus } from '../types';
 import { BigButton, Card } from '../components/UI';
 import { 
   Route, 
@@ -37,7 +37,6 @@ interface OperationHomeProps {
   dailyRoutes?: DailyRoute[];
   routes?: RouteDeparture[];
   tickets?: Ticket[];
-  agregadoSaidas?: AgregadoSaida[];
   onNavigate: (page: string) => void;
   onLogout: () => void;
 }
@@ -50,7 +49,6 @@ const OperationHome: React.FC<OperationHomeProps> = ({
   dailyRoutes = [], 
   routes = [],
   tickets = [],
-  agregadoSaidas = [],
   onNavigate, 
   onLogout 
 }) => {
@@ -65,9 +63,8 @@ const OperationHome: React.FC<OperationHomeProps> = ({
     const d = dailyRoutes.filter(x => x.statusFinanceiro === FinanceiroStatus.PENDENTE).length;
     const r = routes.filter(x => x.statusFinanceiro === FinanceiroStatus.PENDENTE).length;
     const t = tickets.filter(x => x.status === ApprovalStatus.PENDENTE).length;
-    const a = agregadoSaidas.filter(x => x.status === ApprovalStatus.PENDENTE).length;
-    return f + m + d + r + t + a;
-  }, [fuelings, maintenances, dailyRoutes, routes, tickets, agregadoSaidas]);
+    return f + m + d + r + t;
+  }, [fuelings, maintenances, dailyRoutes, routes, tickets]);
 
   const pendingFuelMaintCount = useMemo(() => {
     const f = fuelings.filter(x => x.status === FuelingStatus.PENDENTE).length;
@@ -196,7 +193,6 @@ const OperationHome: React.FC<OperationHomeProps> = ({
           {user.perfil === UserRole.AGREGADO && (
             <>
               <SectionHeader title="Minha Operação (Agregado)" />
-              <BigButton onClick={() => onNavigate('agregado-saida-create')} icon={<Route size={32} />} variant="primary">Lançar Saída</BigButton>
               <BigButton onClick={() => onNavigate('agregado-ticket-create')} icon={<Ticket size={32} />} variant="secondary">Lançar Ticket</BigButton>
             </>
           )}

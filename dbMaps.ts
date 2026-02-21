@@ -412,37 +412,3 @@ export function mapTollToDb(t: any) {
   };
 }
 
-export function mapAgregadoSaidaFromDb(row: any) {
-  if (!row) return null;
-  return {
-    id: row.id,
-    placa: row.placa,
-    oc: row.oc,
-    destino: row.destino,
-    data: row.data,
-    status: row.status ?? 'pendente',
-    createdById: row.created_by_id,
-    createdByNome: row.created_by_nome ?? undefined,
-    adminId: row.admin_id ?? undefined,
-    approvedAt: row.approved_at ?? undefined,
-    motivoRejeicao: row.motivo_rejeicao ?? undefined,
-    createdAt: row.created_at
-  };
-}
-
-export function mapAgregadoSaidaToDb(s: any) {
-  return {
-    id: s.id,
-    placa: s.placa,
-    oc: s.oc,
-    destino: s.destino,
-    data: s.data,
-    status: s.status,
-    created_by_id: s.createdById,
-    created_by_nome: s.createdByNome ?? null,
-    admin_id: s.adminId ?? null,
-    approved_at: s.approvedAt ?? null,
-    motivo_rejeicao: s.motivoRejeicao ?? null,
-    created_at: s.createdAt
-  };
-}

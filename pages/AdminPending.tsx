@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Fueling, MaintenanceRequest, User, Vehicle, FuelingStatus, MaintenanceStatus, DailyRoute, RouteDeparture, FinanceiroStatus, PreventiveTask, Ticket, AgregadoSaida, ApprovalStatus } from '../types';
+import { Fueling, MaintenanceRequest, User, Vehicle, FuelingStatus, MaintenanceStatus, DailyRoute, RouteDeparture, FinanceiroStatus, PreventiveTask, Ticket, ApprovalStatus } from '../types';
 import { Card, Badge, Input } from '../components/UI';
 
 interface AdminPendingProps {
@@ -9,7 +9,6 @@ interface AdminPendingProps {
   dailyRoutes: DailyRoute[];
   routes: RouteDeparture[];
   tickets: Ticket[];
-  agregadoSaidas: AgregadoSaida[];
   vehicles: Vehicle[];
   users: User[];
   currentUser: User;
@@ -18,13 +17,11 @@ interface AdminPendingProps {
   onUpdateDailyRoute: (id: string, update: Partial<DailyRoute>) => void;
   onUpdateRoute: (id: string, update: Partial<RouteDeparture>) => void;
   onUpdateTicket: (id: string, update: Partial<Ticket>) => void;
-  onUpdateAgregadoSaida: (id: string, update: Partial<AgregadoSaida>) => void;
   onDeleteFueling: (id: string) => void;
   onDeleteMaintenance: (id: string) => void;
   onDeleteDailyRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
   onDeleteTicket: (id: string) => void;
-  onDeleteAgregadoSaida: (id: string) => void;
   onBack: () => void;
 }
 
@@ -34,7 +31,6 @@ const AdminPending: React.FC<AdminPendingProps> = ({
   dailyRoutes, 
   routes, 
   tickets,
-  agregadoSaidas,
   vehicles, 
   users, 
   currentUser, 
@@ -43,22 +39,19 @@ const AdminPending: React.FC<AdminPendingProps> = ({
   onUpdateDailyRoute,
   onUpdateRoute,
   onUpdateTicket,
-  onUpdateAgregadoSaida,
   onDeleteFueling,
   onDeleteMaintenance,
   onDeleteDailyRoute,
   onDeleteRoute,
   onDeleteTicket,
-  onDeleteAgregadoSaida,
   onBack 
 }) => {
   const confirmDelete = (msg: string, onConfirm: () => void) => {
     if (window.confirm(msg)) onConfirm();
   };
-  const [tab, setTab] = useState<'fuel' | 'maintenance' | 'financial' | 'tickets' | 'agregado-saidas' | 'alerts' | 'history'>('fuel');
+  const [tab, setTab] = useState<'fuel' | 'maintenance' | 'financial' | 'tickets' | 'alerts' | 'history'>('fuel');
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectTicketId, setRejectTicketId] = useState<string | null>(null);
-  const [rejectAgregadoSaidaId, setRejectAgregadoSaidaId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [motivo, setMotivo] = useState('');
   
@@ -75,7 +68,6 @@ const AdminPending: React.FC<AdminPendingProps> = ({
   const pendingFuelings = fuelings.filter(f => f.status === FuelingStatus.PENDENTE);
   const activeMaintenances = maintenances.filter(m => m.status !== MaintenanceStatus.FEITA && m.status !== MaintenanceStatus.REPROVADA);
   const pendingTickets = tickets.filter(t => t.status === ApprovalStatus.PENDENTE);
-  const pendingAgregadoSaidas = agregadoSaidas.filter(s => s.status === ApprovalStatus.PENDENTE);
   
   const pendingFinancial = useMemo(() => {
     const dailyPending = dailyRoutes.filter(dr => dr.statusFinanceiro === FinanceiroStatus.PENDENTE).map(dr => ({ ...dr, type: 'daily' }));
@@ -146,23 +138,10 @@ const AdminPending: React.FC<AdminPendingProps> = ({
         obs: t.motivoRejeicao ? `Motivo: ${t.motivoRejeicao}` : t.motivo
       }));
 
-    const agregadoSaidasHistory = agregadoSaidas
-      .filter(s => s.status && s.status !== ApprovalStatus.PENDENTE)
-      .map(s => ({
-        id: s.id,
-        data: s.createdAt,
-        placa: s.placa,
-        tipo: 'Saída Agregado',
-        descricao: `OC: ${s.oc} • ${s.destino}`,
-        status: s.status === ApprovalStatus.APROVADO ? 'Aprovado' : 'Rejeitado',
-        adminId: s.adminId,
-        obs: s.motivoRejeicao ? `Motivo: ${s.motivoRejeicao}` : ''
-      }));
-
-    return [...fuelHistory, ...maintenanceHistory, ...financialHistory, ...ticketsHistory, ...agregadoSaidasHistory].sort((a, b) => 
+    return [...fuelHistory, ...maintenanceHistory, ...financialHistory, ...ticketsHistory].sort((a, b) => 
       new Date(b.data).getTime() - new Date(a.data).getTime()
     );
-  }, [fuelings, maintenances, dailyRoutes, routes, tickets, agregadoSaidas]);
+  }, [fuelings, maintenances, dailyRoutes, routes, tickets]);
 
   const fleetAlerts = useMemo(() => {
     const alerts: { vehicle: Vehicle; task: PreventiveTask; reason: string }[] = [];
@@ -224,25 +203,6 @@ const AdminPending: React.FC<AdminPendingProps> = ({
     setMotivo('');
   };
 
-  const handleApproveAgregadoSaida = (id: string) => {
-    onUpdateAgregadoSaida(id, {
-      status: ApprovalStatus.APROVADO,
-      adminId: currentUser.id,
-      approvedAt: new Date().toISOString(),
-      motivoRejeicao: undefined
-    });
-  };
-
-  const handleRejectAgregadoSaida = (id: string) => {
-    if (!motivo) return alert("Motivo obrigatório");
-    onUpdateAgregadoSaida(id, {
-      status: ApprovalStatus.REJEITADO,
-      adminId: currentUser.id,
-      motivoRejeicao: motivo
-    });
-    setRejectAgregadoSaidaId(null);
-    setMotivo('');
-  };
 
   const handleFinishMaintenance = (id: string) => {
     if (!valorMaint || !oficina) return alert("Oficina e Valor são obrigatórios para fechamento financeiro.");
@@ -300,9 +260,6 @@ const AdminPending: React.FC<AdminPendingProps> = ({
         </button>
         <button onClick={() => setTab('tickets')} className={`flex-1 min-w-[120px] py-2 px-4 rounded-lg font-bold text-xs transition-all ${tab === 'tickets' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
           Tickets ({pendingTickets.length})
-        </button>
-        <button onClick={() => setTab('agregado-saidas')} className={`flex-1 min-w-[140px] py-2 px-4 rounded-lg font-bold text-xs transition-all ${tab === 'agregado-saidas' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
-          Saídas Agregado ({pendingAgregadoSaidas.length})
         </button>
         <button onClick={() => setTab('maintenance')} className={`flex-1 min-w-[120px] py-2 px-4 rounded-lg font-bold text-xs transition-all ${tab === 'maintenance' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
           Corretivas ({activeMaintenances.length})
@@ -475,41 +432,6 @@ const AdminPending: React.FC<AdminPendingProps> = ({
         </div>
       )}
 
-      {tab === 'agregado-saidas' && (
-        <div className="grid grid-cols-1 gap-4">
-          {pendingAgregadoSaidas.length === 0 ? (
-            <div className="py-20 text-center text-slate-600 border border-dashed border-slate-800 rounded-2xl">Nenhuma saída pendente</div>
-          ) : (
-            pendingAgregadoSaidas.map(s => (
-              <Card key={s.id} className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-purple-400">{s.placa}</span>
-                    <Badge status={s.status}>{s.status}</Badge>
-                  </div>
-                  <div className="text-sm text-slate-400">OC {s.oc} • Destino {s.destino}</div>
-                  <div className="text-sm text-slate-400">Agregado: {s.createdByNome || getUserName(s.createdById)}</div>
-                  <div className="text-xs text-slate-500 uppercase font-bold tracking-widest">Solicitado em: {new Date(s.createdAt).toLocaleString()}</div>
-                </div>
-                {rejectAgregadoSaidaId === s.id ? (
-                  <div className="w-full md:w-64 space-y-2">
-                    <Input label="Motivo Rejeição" value={motivo} onChange={setMotivo} placeholder="Obrigatório..." />
-                    <div className="flex gap-2">
-                      <button onClick={() => handleRejectAgregadoSaida(s.id)} className="flex-1 bg-red-600 py-2 rounded font-bold text-sm">Confirmar</button>
-                      <button onClick={() => setRejectAgregadoSaidaId(null)} className="flex-1 bg-slate-800 py-2 rounded font-bold text-sm">Voltar</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                    <button onClick={() => handleApproveAgregadoSaida(s.id)} className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-bold">Aprovar</button>
-                    <button onClick={() => setRejectAgregadoSaidaId(s.id)} className="flex-1 md:flex-none bg-red-900/40 text-red-400 border border-red-900 px-6 py-3 rounded-xl font-bold">Rejeitar</button>
-                  </div>
-                )}
-              </Card>
-            ))
-          )}
-        </div>
-      )}
 
       {tab === 'maintenance' && (
         <div className="grid grid-cols-1 gap-4">
