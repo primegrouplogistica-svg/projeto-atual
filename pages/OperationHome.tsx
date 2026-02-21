@@ -184,6 +184,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
               <BigButton onClick={() => onNavigate('daily-route')} icon={<Route size={32} />} variant="primary">Rota do Dia</BigButton>
               <BigButton onClick={() => onNavigate('fueling')} icon={<Fuel size={32} />} variant="primary">Abastecer</BigButton>
               <BigButton onClick={() => onNavigate('maintenance')} icon={<Wrench size={32} />} variant="secondary">Manutenção</BigButton>
+              <BigButton onClick={() => onNavigate('driver-ticket-create')} icon={<Ticket size={32} />} variant="secondary">Lançar Ticket</BigButton>
               <SectionHeader title="Histórico" />
               <BigButton onClick={() => onNavigate('my-requests')} icon={<ClipboardList size={32} />} variant="secondary">Solicitações</BigButton>
             </>
@@ -202,6 +203,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
             <>
               <SectionHeader title="Minha Operação" />
               <BigButton onClick={() => onNavigate('helper-binding')} icon={<LinkIcon size={32} />} variant="primary">Vincular Rota</BigButton>
+              <BigButton onClick={() => onNavigate('driver-ticket-create')} icon={<Ticket size={32} />} variant="secondary">Lançar Ticket</BigButton>
               <SectionHeader title="Histórico" />
               <BigButton onClick={() => onNavigate('my-routes')} icon={<History size={32} />} variant="secondary">Minhas Saídas</BigButton>
             </>

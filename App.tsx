@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   User, UserSession, UserRole, Fueling, MaintenanceRequest,
   RouteDeparture, Vehicle, DailyRoute, Toll, Customer,
-  FixedExpense, AgregadoFreight, Agregado, Ticket,
+  FixedExpense, AgregadoFreight, Agregado, Ticket, ApprovalStatus,
   FuelingStatus, MaintenanceStatus, RouteStatus, FinanceiroStatus
 } from './types';
 import { INITIAL_USERS, INITIAL_VEHICLES, INITIAL_CUSTOMERS } from './constants';
@@ -494,6 +494,8 @@ const App: React.FC = () => {
         return <DriverDailyRoute session={session!} user={currentUser} customers={customers} onBack={() => navigate('operation')} onSubmit={(dr) => { saveRecord(setDailyRoutes, dr); navigate('operation'); }} />;
       case 'helper-binding':
         return <HelperRouteBinding session={session!} user={currentUser} dailyRoutes={dailyRoutes} users={users} onBack={() => navigate('operation')} onBind={(rId) => { updateRecord(setDailyRoutes, rId, { ajudanteId: currentUser.id, ajudanteNome: currentUser.nome }); navigate('operation'); }} />;
+      case 'driver-ticket-create':
+        return <AdminTicketForm users={users} vehicles={vehicles} createdById={currentUser?.id} createdByNome={currentUser?.nome} defaultStatus={ApprovalStatus.PENDENTE} onSubmit={(t) => { saveRecord(setTickets, t); navigate('operation'); }} onBack={() => navigate('operation')} />;
       case 'select-vehicle':
         return <VehicleSelection vehicles={vehicles} onSelect={(vId, pl) => { const s = { userId: currentUser.id, vehicleId: vId, placa: pl, updatedAt: new Date().toISOString() }; setSession(s); if (typeof window !== 'undefined') localStorage.setItem('prime_group_session', JSON.stringify(s)); navigate('operation'); }} onBack={() => navigate('operation')} />;
       case 'my-requests':
