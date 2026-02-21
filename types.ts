@@ -69,6 +69,8 @@ export interface Agregado {
   nome: string;
   placa: string;
   ativo: boolean;
+  /** Marca agregado como Antonio */
+  isAntonio?: boolean;
 }
 
 export interface FixedExpense {
@@ -93,6 +95,10 @@ export interface AgregadoFreight {
   rota?: string;
   /** Conta de faturamento (separação Antonio) */
   conta?: 'geral' | 'antonio';
+  motoristaId?: string;
+  ajudanteId?: string;
+  motoristaNome?: string;
+  ajudanteNome?: string;
   data: string;
   createdAt: string;
 }

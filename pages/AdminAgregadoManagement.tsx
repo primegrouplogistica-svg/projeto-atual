@@ -14,6 +14,7 @@ const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agreg
   const [showForm, setShowForm] = useState(false);
   const [nome, setNome] = useState('');
   const [placa, setPlaca] = useState('');
+  const [isAntonio, setIsAntonio] = useState(false);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,13 +24,15 @@ const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agreg
       id: crypto.randomUUID(),
       nome,
       placa: placa.toUpperCase(),
-      ativo: true
+      ativo: true,
+      isAntonio
     };
 
     onUpdateAgregados([newAgregado, ...agregados]);
     setShowForm(false);
     setNome('');
     setPlaca('');
+    setIsAntonio(false);
   };
 
   const toggleStatus = (id: string) => {
@@ -68,6 +71,18 @@ const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agreg
           <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Nome do Agregado" value={nome} onChange={setNome} required placeholder="Ex: João Transportes" />
             <Input label="Placa do Veículo" value={placa} onChange={setPlaca} required placeholder="ABC-1234" />
+            <div className="md:col-span-2 flex items-center gap-2">
+              <input
+                id="agregado-antonio"
+                type="checkbox"
+                checked={isAntonio}
+                onChange={(e) => setIsAntonio(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500"
+              />
+              <label htmlFor="agregado-antonio" className="text-xs font-bold text-slate-400 uppercase">
+                Agregado Antonio
+              </label>
+            </div>
             <div className="md:col-span-2 mt-4">
               <BigButton type="submit" onClick={() => {}} variant="success">CADASTRAR AGREGADO</BigButton>
             </div>
@@ -84,6 +99,9 @@ const AdminAgregadoManagement: React.FC<AdminAgregadoManagementProps> = ({ agreg
                 <div className="bg-slate-950 inline-block px-2 py-0.5 rounded border border-slate-800 font-mono font-bold text-blue-400 text-sm mt-1">
                   {a.placa}
                 </div>
+                {a.isAntonio && (
+                  <div className="text-[10px] text-amber-400 font-black uppercase mt-1">Antonio</div>
+                )}
               </div>
               <Badge status={a.ativo ? 'aprovado' : 'rejeitado'}>
                 {a.ativo ? 'Ativo' : 'Inativo'}

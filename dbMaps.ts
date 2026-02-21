@@ -75,10 +75,10 @@ export function mapCustomerToDb(c: any) {
 
 export function mapAgregadoFromDb(row: any) {
   if (!row) return null;
-  return { id: row.id, nome: row.nome, placa: row.placa, ativo: row.ativo ?? true };
+  return { id: row.id, nome: row.nome, placa: row.placa, ativo: row.ativo ?? true, isAntonio: row.is_antonio ?? false };
 }
 export function mapAgregadoToDb(a: any) {
-  return { id: a.id, nome: a.nome, placa: a.placa, ativo: a.ativo ?? true };
+  return { id: a.id, nome: a.nome, placa: a.placa, ativo: a.ativo ?? true, is_antonio: a.isAntonio ?? false };
 }
 
 export function mapFixedExpenseFromDb(row: any) {
@@ -306,6 +306,10 @@ export function mapAgregadoFreightFromDb(row: any) {
     oc: row.oc,
     rota: row.rota ?? '',
     conta: row.conta ?? undefined,
+    motoristaId: row.motorista_id ?? undefined,
+    ajudanteId: row.ajudante_id ?? undefined,
+    motoristaNome: row.motorista_nome ?? undefined,
+    ajudanteNome: row.ajudante_nome ?? undefined,
     data: row.data,
     createdAt: row.created_at
   };
@@ -321,6 +325,10 @@ export function mapAgregadoFreightToDb(f: any) {
     oc: f.oc,
     rota: f.rota ?? null,
     conta: f.conta ?? null,
+    motorista_id: f.motoristaId ?? null,
+    ajudante_id: f.ajudanteId ?? null,
+    motorista_nome: f.motoristaNome ?? null,
+    ajudante_nome: f.ajudanteNome ?? null,
     data: f.data,
     created_at: f.createdAt
   };
