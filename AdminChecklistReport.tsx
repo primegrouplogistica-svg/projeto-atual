@@ -50,14 +50,16 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
     }
   }, [selectedAgregado, isAntonio]);
 
-  const motoristasOptions = useMemo(
-    () => users.filter(u => u.perfil === UserRole.MOTORISTA).map(u => ({ label: u.nome, value: u.id })),
-    [users]
-  );
-  const ajudantesOptions = useMemo(
-    () => users.filter(u => u.perfil === UserRole.AJUDANTE).map(u => ({ label: u.nome, value: u.id })),
-    [users]
-  );
+  const motoristasOptions = useMemo(() => {
+    const list = users.filter(u => String(u.perfil).toLowerCase() === UserRole.MOTORISTA).map(u => ({ label: u.nome, value: u.id }));
+    if (list.length > 0) return list;
+    return users.map(u => ({ label: `${u.nome} (${u.perfil})`, value: u.id }));
+  }, [users]);
+  const ajudantesOptions = useMemo(() => {
+    const list = users.filter(u => String(u.perfil).toLowerCase() === UserRole.AJUDANTE).map(u => ({ label: u.nome, value: u.id }));
+    if (list.length > 0) return list;
+    return users.map(u => ({ label: `${u.nome} (${u.perfil})`, value: u.id }));
+  }, [users]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
