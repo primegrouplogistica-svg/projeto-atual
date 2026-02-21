@@ -3,7 +3,8 @@ export enum UserRole {
   ADMIN = 'admin',
   CUSTOM_ADMIN = 'custom_admin',
   MOTORISTA = 'motorista',
-  AJUDANTE = 'ajudante'
+  AJUDANTE = 'ajudante',
+  AGREGADO = 'agregado'
 }
 
 export enum VehicleStatus {
@@ -13,6 +14,12 @@ export enum VehicleStatus {
 }
 
 export enum FuelingStatus {
+  PENDENTE = 'pendente',
+  APROVADO = 'aprovado',
+  REJEITADO = 'rejeitado'
+}
+
+export enum ApprovalStatus {
   PENDENTE = 'pendente',
   APROVADO = 'aprovado',
   REJEITADO = 'rejeitado'
@@ -47,6 +54,8 @@ export interface User {
   permissoes?: string[];
   /** Equipe de faturamento */
   equipeTipo?: 'geral' | 'antonio' | 'ambos';
+  /** Vínculo com cadastro de agregado */
+  agregadoId?: string;
 }
 
 /** Localização em tempo real do motorista (celular). */
@@ -119,6 +128,27 @@ export interface Ticket {
   motoristaId: string;
   motoristaNome?: string;
   data: string;
+  status: ApprovalStatus;
+  createdById: string;
+  createdByNome?: string;
+  adminId?: string;
+  approvedAt?: string;
+  motivoRejeicao?: string;
+  createdAt: string;
+}
+
+export interface AgregadoSaida {
+  id: string;
+  placa: string;
+  oc: string;
+  destino: string;
+  data: string;
+  status: ApprovalStatus;
+  createdById: string;
+  createdByNome?: string;
+  adminId?: string;
+  approvedAt?: string;
+  motivoRejeicao?: string;
   createdAt: string;
 }
 

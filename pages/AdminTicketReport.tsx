@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Ticket, User, Vehicle, UserRole } from '../types';
+import { ApprovalStatus, Ticket, User, Vehicle, UserRole } from '../types';
 import { Card, Input, Select } from '../components/UI';
 import { formatDateBr, parseDateLocal } from '../utils/date';
 
@@ -49,6 +49,7 @@ const AdminTicketReport: React.FC<AdminTicketReportProps> = ({ tickets, users, v
       const matchesPlaca = !placaFiltro || t.placa === placaFiltro;
       const matchesMotorista = !motoristaFiltro || t.motoristaId === motoristaFiltro;
       const matchesTicket = !ticketQ || t.numeroTicket.toLowerCase().includes(ticketQ);
+      const statusOk = !t.status || t.status === ApprovalStatus.APROVADO;
       const matchesBusca = !q ||
         t.numeroTicket.toLowerCase().includes(q) ||
         t.oc.toLowerCase().includes(q) ||
@@ -56,7 +57,7 @@ const AdminTicketReport: React.FC<AdminTicketReportProps> = ({ tickets, users, v
         t.placa.toLowerCase().includes(q) ||
         (t.notaFiscal?.toLowerCase().includes(q) ?? false) ||
         (t.motoristaNome?.toLowerCase().includes(q) ?? false);
-      return matchesDate && matchesPlaca && matchesMotorista && matchesTicket && matchesBusca;
+      return statusOk && matchesDate && matchesPlaca && matchesMotorista && matchesTicket && matchesBusca;
     }).sort((a, b) => parseDateLocal(b.data || b.createdAt).getTime() - parseDateLocal(a.data || a.createdAt).getTime());
   }, [tickets, startDate, endDate, placaFiltro, motoristaFiltro, ticketFiltro, busca]);
 

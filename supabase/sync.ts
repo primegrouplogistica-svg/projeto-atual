@@ -27,7 +27,9 @@ import {
   mapTollFromDb,
   mapTollToDb,
   mapTicketFromDb,
-  mapTicketToDb
+  mapTicketToDb,
+  mapAgregadoSaidaFromDb,
+  mapAgregadoSaidaToDb
 } from './dbMaps';
 
 export interface AllData {
@@ -43,6 +45,7 @@ export interface AllData {
   agregadoFreights: any[];
   tolls: any[];
   tickets: any[];
+  agregadoSaidas: any[];
 }
 
 export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<AllData | null> {
@@ -59,7 +62,8 @@ export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<All
       agregadosRes,
       agregadoFreightsRes,
       tollsRes,
-      ticketsRes
+      ticketsRes,
+      agregadoSaidasRes
     ] = await Promise.all([
       supabase.from('users').select('*'),
       supabase.from('vehicles').select('*'),
@@ -72,7 +76,8 @@ export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<All
       supabase.from('agregados').select('*'),
       supabase.from('agregado_freights').select('*'),
       supabase.from('tolls').select('*'),
-      supabase.from('tickets').select('*')
+      supabase.from('tickets').select('*'),
+      supabase.from('agregado_saidas').select('*')
     ]);
 
     if (usersRes.error) throw usersRes.error;
@@ -87,6 +92,7 @@ export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<All
     if (agregadoFreightsRes.error) throw agregadoFreightsRes.error;
     if (tollsRes.error) throw tollsRes.error;
     if (ticketsRes.error) throw ticketsRes.error;
+    if (agregadoSaidasRes.error) throw agregadoSaidasRes.error;
 
     return {
       users: (usersRes.data ?? []).filter((row: any) => !row.excluido).map(mapUserFromDb).filter(Boolean),
@@ -100,7 +106,8 @@ export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<All
       agregados: (agregadosRes.data ?? []).map(mapAgregadoFromDb).filter(Boolean),
       agregadoFreights: (agregadoFreightsRes.data ?? []).map(mapAgregadoFreightFromDb).filter(Boolean),
       tolls: (tollsRes.data ?? []).map(mapTollFromDb).filter(Boolean),
-      tickets: (ticketsRes.data ?? []).map(mapTicketFromDb).filter(Boolean)
+      tickets: (ticketsRes.data ?? []).map(mapTicketFromDb).filter(Boolean),
+      agregadoSaidas: (agregadoSaidasRes.data ?? []).map(mapAgregadoSaidaFromDb).filter(Boolean)
     };
   } catch (e) {
     console.error('loadAllFromSupabase:', e);
@@ -122,7 +129,8 @@ export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData)
       data.agregados.length ? supabase.from('agregados').upsert(data.agregados.map(mapAgregadoToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.agregadoFreights.length ? supabase.from('agregado_freights').upsert(data.agregadoFreights.map(mapAgregadoFreightToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.tolls.length ? supabase.from('tolls').upsert(data.tolls.map(mapTollToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
-      data.tickets.length ? supabase.from('tickets').upsert(data.tickets.map(mapTicketToDb), { onConflict: 'id' }) : Promise.resolve({ error: null })
+      data.tickets.length ? supabase.from('tickets').upsert(data.tickets.map(mapTicketToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
+      data.agregadoSaidas.length ? supabase.from('agregado_saidas').upsert(data.agregadoSaidas.map(mapAgregadoSaidaToDb), { onConflict: 'id' }) : Promise.resolve({ error: null })
     ]);
     const labels = [
       'users',
@@ -136,7 +144,8 @@ export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData)
       'agregados',
       'agregado_freights',
       'tolls',
-      'tickets'
+      'tickets',
+      'agregado_saidas'
     ];
     results.forEach((res: any, idx: number) => {
       if (res?.error) {
@@ -204,4 +213,9 @@ export async function deleteAgregadoFreightFromSupabase(supabase: SupabaseClient
 export async function deleteTicketFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
   const { error } = await supabase.from('tickets').delete().eq('id', id);
   if (error) console.error('deleteTicketFromSupabase:', error);
+}
+
+export async function deleteAgregadoSaidaFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.from('agregado_saidas').delete().eq('id', id);
+  if (error) console.error('deleteAgregadoSaidaFromSupabase:', error);
 }

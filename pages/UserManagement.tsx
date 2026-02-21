@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { User, UserRole } from '../types';
+import { Agregado, User, UserRole } from '../types';
 import { Card, Badge, Input, Select, BigButton } from '../components/UI';
 
 interface UserMgmtProps {
   users: User[];
+  agregados?: Agregado[];
   onSaveUser: (user: User) => Promise<void>;
   onDeleteUser: (userId: string) => void;
   onBack: () => void;
@@ -63,19 +64,20 @@ const PERMISSION_GROUPS = [
   }
 ];
 
-const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUser, onBack }) => {
+const UserManagement: React.FC<UserMgmtProps> = ({ users, agregados = [], onSaveUser, onDeleteUser, onBack }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [perfil, setPerfil] = useState<UserRole>(UserRole.MOTORISTA);
   const [equipeTipo, setEquipeTipo] = useState<'geral' | 'antonio' | 'ambos'>('geral');
+  const [agregadoId, setAgregadoId] = useState('');
   const [senha, setSenha] = useState('');
   const [permissoes, setPermissoes] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   const resetForm = () => {
-    setNome(''); setEmail(''); setPerfil(UserRole.MOTORISTA); setEquipeTipo('geral'); setSenha(''); setPermissoes([]); setEditingUser(null); setShowForm(false);
+    setNome(''); setEmail(''); setPerfil(UserRole.MOTORISTA); setEquipeTipo('geral'); setAgregadoId(''); setSenha(''); setPermissoes([]); setEditingUser(null); setShowForm(false);
   };
 
   const handleEditClick = (user: User) => {
@@ -84,6 +86,7 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
     setEmail(user.email);
     setPerfil(user.perfil);
     setEquipeTipo(user.equipeTipo || 'geral');
+    setAgregadoId(user.agregadoId || '');
     setSenha(user.senha || '');
     setPermissoes(user.permissoes || []);
     setShowForm(true);
@@ -117,7 +120,8 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
       perfil,
       ativo: editingUser ? editingUser.ativo : true,
       permissoes: perfil === UserRole.CUSTOM_ADMIN ? permissoes : undefined,
-      equipeTipo: perfil === UserRole.MOTORISTA || perfil === UserRole.AJUDANTE ? equipeTipo : 'geral'
+      equipeTipo: perfil === UserRole.MOTORISTA || perfil === UserRole.AJUDANTE ? equipeTipo : 'geral',
+      agregadoId: perfil === UserRole.AGREGADO ? agregadoId : undefined
     };
     await onSaveUser(userToSave);
     setIsSaving(false);
@@ -157,6 +161,7 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
                   { label: 'Admin Alternativo (Custom)', value: UserRole.CUSTOM_ADMIN },
                   { label: 'Motorista', value: UserRole.MOTORISTA },
                   { label: 'Ajudante', value: UserRole.AJUDANTE },
+                  { label: 'Agregado', value: UserRole.AGREGADO },
                 ]}
                 required
               />
@@ -170,6 +175,15 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
                     { label: 'Antonio', value: 'antonio' },
                     { label: 'Ambos', value: 'ambos' }
                   ]}
+                  required
+                />
+              )}
+              {perfil === UserRole.AGREGADO && (
+                <Select
+                  label="Agregado (Cadastro)"
+                  value={agregadoId}
+                  onChange={setAgregadoId}
+                  options={agregados.filter(a => a.ativo).map(a => ({ label: `${a.nome} (${a.placa})`, value: a.id }))}
                   required
                 />
               )}
@@ -230,6 +244,9 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
                 <Badge status={u.ativo ? 'rodando' : 'rejeitado'}>{u.perfil}</Badge>
                 {(u.perfil === UserRole.MOTORISTA || u.perfil === UserRole.AJUDANTE) && (
                   <span className="text-[9px] text-amber-400 font-black uppercase">{u.equipeTipo || 'geral'}</span>
+                )}
+                {u.perfil === UserRole.AGREGADO && (
+                  <span className="text-[9px] text-emerald-400 font-black uppercase">{agregados.find(a => a.id === u.agregadoId)?.placa || 'sem placa'}</span>
                 )}
               </div>
             </div>

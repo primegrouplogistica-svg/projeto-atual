@@ -1,24 +1,26 @@
 import React, { useMemo, useState } from 'react';
-import { ApprovalStatus, Ticket, User, UserRole, Vehicle } from '../types';
+import { ApprovalStatus, Agregado, Ticket, User, UserRole } from '../types';
 import { Card, Input, Select, BigButton } from '../components/UI';
 import { todayLocalDateInput } from '../utils/date';
 
-interface AdminTicketFormProps {
+interface AgregadoTicketFormProps {
+  currentUser: User;
+  agregados: Agregado[];
   users: User[];
-  vehicles: Vehicle[];
-  createdById?: string;
-  createdByNome?: string;
-  defaultStatus?: ApprovalStatus;
   onSubmit: (ticket: Ticket) => void;
   onBack: () => void;
 }
 
-const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, createdById, createdByNome, defaultStatus = ApprovalStatus.APROVADO, onSubmit, onBack }) => {
+const AgregadoTicketForm: React.FC<AgregadoTicketFormProps> = ({ currentUser, agregados, users, onSubmit, onBack }) => {
   const [numeroTicket, setNumeroTicket] = useState('');
   const [notaFiscal, setNotaFiscal] = useState('');
   const [oc, setOc] = useState('');
   const [motivo, setMotivo] = useState('');
-  const [placa, setPlaca] = useState('');
+  const agregadoAtual = useMemo(
+    () => agregados.find(a => a.id === currentUser.agregadoId),
+    [agregados, currentUser.agregadoId]
+  );
+  const placa = agregadoAtual?.placa?.toUpperCase() || '';
   const [motoristaId, setMotoristaId] = useState('');
   const [data, setData] = useState(todayLocalDateInput());
 
@@ -27,15 +29,6 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, crea
       .filter(u => u.perfil === UserRole.MOTORISTA)
       .map(u => ({ label: u.nome, value: u.id }));
   }, [users]);
-
-  const placaOptions = useMemo(() => {
-    return vehicles
-      .map(v => v.placa)
-      .filter(Boolean)
-      .map(p => p.toUpperCase())
-      .sort()
-      .map(p => ({ label: p, value: p }));
-  }, [vehicles]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,9 +47,9 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, crea
       motoristaId,
       motoristaNome: motoristaNome || undefined,
       data,
-      status: defaultStatus,
-      createdById: createdById || motoristaId,
-      createdByNome: createdByNome,
+      status: ApprovalStatus.PENDENTE,
+      createdById: currentUser.id,
+      createdByNome: currentUser.nome,
       createdAt: new Date().toISOString()
     };
     onSubmit(newTicket);
@@ -67,7 +60,7 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, crea
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Lançar Ticket</h2>
-          <p className="text-slate-500 text-sm">Registro de tickets e ocorrências</p>
+          <p className="text-slate-500 text-sm">Envio para aprovação do admin</p>
         </div>
         <button onClick={onBack} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl font-bold border border-slate-700 transition-colors">
           Cancelar
@@ -76,6 +69,11 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, crea
 
       <Card className="border-indigo-900/30">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {!agregadoAtual && (
+            <div className="bg-red-900/20 border border-red-900/40 p-3 rounded-lg text-red-400 text-[10px] font-black uppercase text-center">
+              Seu usuário não está vinculado a um agregado. Peça ao admin para vincular no cadastro de equipe.
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Data do Ticket"
@@ -104,13 +102,12 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, crea
               required
               placeholder="Ex: OC-8855"
             />
-            <Select
-              label="Placa"
-              value={placa}
-              onChange={setPlaca}
-              options={placaOptions}
-              required
-            />
+            <div>
+              <label className="block text-slate-400 text-sm font-medium mb-1.5 uppercase tracking-wider">Placa</label>
+              <div className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-blue-400 font-mono font-bold tracking-widest">
+                {placa || '—'}
+              </div>
+            </div>
             <Select
               label="Motorista"
               value={motoristaId}
@@ -131,8 +128,8 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, crea
             />
           </div>
 
-          <BigButton type="submit" onClick={() => {}} disabled={!numeroTicket || !oc || !motivo || !placa || !motoristaId || !data}>
-            CONFIRMAR LANÇAMENTO
+          <BigButton type="submit" onClick={() => {}} disabled={!numeroTicket || !oc || !motivo || !placa || !motoristaId || !data || !agregadoAtual}>
+            ENVIAR PARA APROVAÇÃO
           </BigButton>
         </form>
       </Card>
@@ -140,4 +137,4 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, crea
   );
 };
 
-export default AdminTicketForm;
+export default AgregadoTicketForm;

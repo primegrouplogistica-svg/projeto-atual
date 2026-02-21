@@ -1,6 +1,6 @@
 
 import React, { useMemo, useEffect, useRef } from 'react';
-import { User, UserSession, UserRole, Fueling, MaintenanceRequest, DailyRoute, RouteDeparture, FuelingStatus, MaintenanceStatus, FinanceiroStatus } from '../types';
+import { User, UserSession, UserRole, Fueling, MaintenanceRequest, DailyRoute, RouteDeparture, FuelingStatus, MaintenanceStatus, FinanceiroStatus, Ticket, AgregadoSaida, ApprovalStatus } from '../types';
 import { BigButton, Card } from '../components/UI';
 import { 
   Route, 
@@ -36,6 +36,8 @@ interface OperationHomeProps {
   maintenances?: MaintenanceRequest[];
   dailyRoutes?: DailyRoute[];
   routes?: RouteDeparture[];
+  tickets?: Ticket[];
+  agregadoSaidas?: AgregadoSaida[];
   onNavigate: (page: string) => void;
   onLogout: () => void;
 }
@@ -46,21 +48,26 @@ const OperationHome: React.FC<OperationHomeProps> = ({
   fuelings = [], 
   maintenances = [], 
   dailyRoutes = [], 
-  routes = [], 
+  routes = [],
+  tickets = [],
+  agregadoSaidas = [],
   onNavigate, 
   onLogout 
 }) => {
   const isAdminTotal = user.perfil === UserRole.ADMIN;
   const isCustomAdmin = user.perfil === UserRole.CUSTOM_ADMIN;
   const isAnyAdmin = isAdminTotal || isCustomAdmin;
+  const isAgregado = user.perfil === UserRole.AGREGADO;
 
   const pendingCount = useMemo(() => {
     const f = fuelings.filter(x => x.status === FuelingStatus.PENDENTE).length;
     const m = maintenances.filter(x => x.status === MaintenanceStatus.PENDENTE).length;
     const d = dailyRoutes.filter(x => x.statusFinanceiro === FinanceiroStatus.PENDENTE).length;
     const r = routes.filter(x => x.statusFinanceiro === FinanceiroStatus.PENDENTE).length;
-    return f + m + d + r;
-  }, [fuelings, maintenances, dailyRoutes, routes]);
+    const t = tickets.filter(x => x.status === ApprovalStatus.PENDENTE).length;
+    const a = agregadoSaidas.filter(x => x.status === ApprovalStatus.PENDENTE).length;
+    return f + m + d + r + t + a;
+  }, [fuelings, maintenances, dailyRoutes, routes, tickets, agregadoSaidas]);
 
   const pendingFuelMaintCount = useMemo(() => {
     const f = fuelings.filter(x => x.status === FuelingStatus.PENDENTE).length;
@@ -161,7 +168,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
         </div>
       </Card>
 
-      {!session && !isAnyAdmin && (
+      {!session && !isAnyAdmin && !isAgregado && (
         <div className="bg-slate-900/30 p-16 rounded-3xl text-center border-2 border-dashed border-slate-800/50">
           <Truck className="w-16 h-16 text-slate-700 mx-auto mb-6 opacity-40" />
           <h3 className="text-lg font-black text-slate-400 uppercase tracking-widest">Aguardando Vinculação</h3>
@@ -171,7 +178,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
         </div>
       )}
 
-      {(session || isAnyAdmin) && (
+      {(session || isAnyAdmin || isAgregado) && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Menu para Motoristas */}
           {user.perfil === UserRole.MOTORISTA && (
@@ -182,6 +189,15 @@ const OperationHome: React.FC<OperationHomeProps> = ({
               <BigButton onClick={() => onNavigate('maintenance')} icon={<Wrench size={32} />} variant="secondary">Manutenção</BigButton>
               <SectionHeader title="Histórico" />
               <BigButton onClick={() => onNavigate('my-requests')} icon={<ClipboardList size={32} />} variant="secondary">Solicitações</BigButton>
+            </>
+          )}
+
+          {/* Menu para Agregados */}
+          {user.perfil === UserRole.AGREGADO && (
+            <>
+              <SectionHeader title="Minha Operação (Agregado)" />
+              <BigButton onClick={() => onNavigate('agregado-saida-create')} icon={<Route size={32} />} variant="primary">Lançar Saída</BigButton>
+              <BigButton onClick={() => onNavigate('agregado-ticket-create')} icon={<Ticket size={32} />} variant="secondary">Lançar Ticket</BigButton>
             </>
           )}
 

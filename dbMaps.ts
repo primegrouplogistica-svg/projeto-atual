@@ -14,7 +14,8 @@ export function mapUserFromDb(row: any) {
     perfil: row.perfil,
     ativo: row.ativo ?? true,
     permissoes: row.permissoes ?? [],
-    equipeTipo: hasEquipe ? (row.equipe_tipo ?? 'geral') : undefined
+    equipeTipo: hasEquipe ? (row.equipe_tipo ?? 'geral') : undefined,
+    agregadoId: row.agregado_id ?? undefined
   };
 }
 
@@ -27,7 +28,8 @@ export function mapUserToDb(u: any) {
     perfil: u.perfil,
     ativo: u.ativo ?? true,
     permissoes: u.permissoes ?? [],
-    equipe_tipo: u.equipeTipo ?? 'geral'
+    equipe_tipo: u.equipeTipo ?? 'geral',
+    agregado_id: u.agregadoId ?? null
   };
 }
 
@@ -38,7 +40,7 @@ export function mapVehicleFromDb(row: any) {
     placa: row.placa,
     modelo: row.modelo,
     kmAtual: row.km_atual ?? 0,
-    status: row.status,
+    status: row.status ?? 'aprovado',
     faturamentoAntonio: row.faturamento_antonio ?? false,
     preventiveTasks: row.preventive_tasks ?? [],
     proximaManutencaoKm: row.proxima_manutencao_km,
@@ -118,7 +120,7 @@ export function mapFuelingFromDb(row: any) {
     kmNoMomento: row.km_no_momento,
     valor: Number(row.valor),
     fotoNota: row.foto_nota,
-    status: row.status,
+    status: row.status ?? 'pendente',
     motivoRejeicao: row.motivo_rejeicao,
     adminAprovadorId: row.admin_aprovador_id,
     createdAt: row.created_at,
@@ -357,6 +359,12 @@ export function mapTicketFromDb(row: any) {
     motoristaId: row.motorista_id,
     motoristaNome: row.motorista_nome ?? undefined,
     data: row.data,
+    status: row.status,
+    createdById: row.created_by_id,
+    createdByNome: row.created_by_nome ?? undefined,
+    adminId: row.admin_id ?? undefined,
+    approvedAt: row.approved_at ?? undefined,
+    motivoRejeicao: row.motivo_rejeicao ?? undefined,
     createdAt: row.created_at
   };
 }
@@ -372,6 +380,12 @@ export function mapTicketToDb(t: any) {
     motorista_id: t.motoristaId,
     motorista_nome: t.motoristaNome ?? null,
     data: t.data,
+    status: t.status,
+    created_by_id: t.createdById,
+    created_by_nome: t.createdByNome ?? null,
+    admin_id: t.adminId ?? null,
+    approved_at: t.approvedAt ?? null,
+    motivo_rejeicao: t.motivoRejeicao ?? null,
     created_at: t.createdAt
   };
 }
@@ -395,5 +409,40 @@ export function mapTollToDb(t: any) {
     valor: t.valor,
     data: t.data,
     created_at: t.createdAt
+  };
+}
+
+export function mapAgregadoSaidaFromDb(row: any) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    placa: row.placa,
+    oc: row.oc,
+    destino: row.destino,
+    data: row.data,
+    status: row.status ?? 'pendente',
+    createdById: row.created_by_id,
+    createdByNome: row.created_by_nome ?? undefined,
+    adminId: row.admin_id ?? undefined,
+    approvedAt: row.approved_at ?? undefined,
+    motivoRejeicao: row.motivo_rejeicao ?? undefined,
+    createdAt: row.created_at
+  };
+}
+
+export function mapAgregadoSaidaToDb(s: any) {
+  return {
+    id: s.id,
+    placa: s.placa,
+    oc: s.oc,
+    destino: s.destino,
+    data: s.data,
+    status: s.status,
+    created_by_id: s.createdById,
+    created_by_nome: s.createdByNome ?? null,
+    admin_id: s.adminId ?? null,
+    approved_at: s.approvedAt ?? null,
+    motivo_rejeicao: s.motivoRejeicao ?? null,
+    created_at: s.createdAt
   };
 }

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Fueling, MaintenanceRequest, User, Vehicle, FuelingStatus, MaintenanceStatus, DailyRoute, RouteDeparture, FinanceiroStatus, PreventiveTask } from '../types';
+import { Fueling, MaintenanceRequest, User, Vehicle, FuelingStatus, MaintenanceStatus, DailyRoute, RouteDeparture, FinanceiroStatus, PreventiveTask, Ticket, AgregadoSaida, ApprovalStatus } from '../types';
 import { Card, Badge, Input } from '../components/UI';
 
 interface AdminPendingProps {
@@ -8,6 +8,8 @@ interface AdminPendingProps {
   maintenances: MaintenanceRequest[];
   dailyRoutes: DailyRoute[];
   routes: RouteDeparture[];
+  tickets: Ticket[];
+  agregadoSaidas: AgregadoSaida[];
   vehicles: Vehicle[];
   users: User[];
   currentUser: User;
@@ -15,10 +17,14 @@ interface AdminPendingProps {
   onUpdateMaintenance: (id: string, update: Partial<MaintenanceRequest>) => void;
   onUpdateDailyRoute: (id: string, update: Partial<DailyRoute>) => void;
   onUpdateRoute: (id: string, update: Partial<RouteDeparture>) => void;
+  onUpdateTicket: (id: string, update: Partial<Ticket>) => void;
+  onUpdateAgregadoSaida: (id: string, update: Partial<AgregadoSaida>) => void;
   onDeleteFueling: (id: string) => void;
   onDeleteMaintenance: (id: string) => void;
   onDeleteDailyRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
+  onDeleteTicket: (id: string) => void;
+  onDeleteAgregadoSaida: (id: string) => void;
   onBack: () => void;
 }
 
@@ -27,6 +33,8 @@ const AdminPending: React.FC<AdminPendingProps> = ({
   maintenances, 
   dailyRoutes, 
   routes, 
+  tickets,
+  agregadoSaidas,
   vehicles, 
   users, 
   currentUser, 
@@ -34,17 +42,23 @@ const AdminPending: React.FC<AdminPendingProps> = ({
   onUpdateMaintenance,
   onUpdateDailyRoute,
   onUpdateRoute,
+  onUpdateTicket,
+  onUpdateAgregadoSaida,
   onDeleteFueling,
   onDeleteMaintenance,
   onDeleteDailyRoute,
   onDeleteRoute,
+  onDeleteTicket,
+  onDeleteAgregadoSaida,
   onBack 
 }) => {
   const confirmDelete = (msg: string, onConfirm: () => void) => {
     if (window.confirm(msg)) onConfirm();
   };
-  const [tab, setTab] = useState<'fuel' | 'maintenance' | 'financial' | 'alerts' | 'history'>('fuel');
+  const [tab, setTab] = useState<'fuel' | 'maintenance' | 'financial' | 'tickets' | 'agregado-saidas' | 'alerts' | 'history'>('fuel');
   const [rejectId, setRejectId] = useState<string | null>(null);
+  const [rejectTicketId, setRejectTicketId] = useState<string | null>(null);
+  const [rejectAgregadoSaidaId, setRejectAgregadoSaidaId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [motivo, setMotivo] = useState('');
   
@@ -60,6 +74,8 @@ const AdminPending: React.FC<AdminPendingProps> = ({
 
   const pendingFuelings = fuelings.filter(f => f.status === FuelingStatus.PENDENTE);
   const activeMaintenances = maintenances.filter(m => m.status !== MaintenanceStatus.FEITA && m.status !== MaintenanceStatus.REPROVADA);
+  const pendingTickets = tickets.filter(t => t.status === ApprovalStatus.PENDENTE);
+  const pendingAgregadoSaidas = agregadoSaidas.filter(s => s.status === ApprovalStatus.PENDENTE);
   
   const pendingFinancial = useMemo(() => {
     const dailyPending = dailyRoutes.filter(dr => dr.statusFinanceiro === FinanceiroStatus.PENDENTE).map(dr => ({ ...dr, type: 'daily' }));
@@ -117,10 +133,36 @@ const AdminPending: React.FC<AdminPendingProps> = ({
       }))
     ];
 
-    return [...fuelHistory, ...maintenanceHistory, ...financialHistory].sort((a, b) => 
+    const ticketsHistory = tickets
+      .filter(t => t.status && t.status !== ApprovalStatus.PENDENTE)
+      .map(t => ({
+        id: t.id,
+        data: t.createdAt,
+        placa: t.placa,
+        tipo: 'Ticket',
+        descricao: `Ticket ${t.numeroTicket} (OC: ${t.oc})`,
+        status: t.status === ApprovalStatus.APROVADO ? 'Aprovado' : 'Rejeitado',
+        adminId: t.adminId,
+        obs: t.motivoRejeicao ? `Motivo: ${t.motivoRejeicao}` : t.motivo
+      }));
+
+    const agregadoSaidasHistory = agregadoSaidas
+      .filter(s => s.status && s.status !== ApprovalStatus.PENDENTE)
+      .map(s => ({
+        id: s.id,
+        data: s.createdAt,
+        placa: s.placa,
+        tipo: 'Saída Agregado',
+        descricao: `OC: ${s.oc} • ${s.destino}`,
+        status: s.status === ApprovalStatus.APROVADO ? 'Aprovado' : 'Rejeitado',
+        adminId: s.adminId,
+        obs: s.motivoRejeicao ? `Motivo: ${s.motivoRejeicao}` : ''
+      }));
+
+    return [...fuelHistory, ...maintenanceHistory, ...financialHistory, ...ticketsHistory, ...agregadoSaidasHistory].sort((a, b) => 
       new Date(b.data).getTime() - new Date(a.data).getTime()
     );
-  }, [fuelings, maintenances, dailyRoutes, routes]);
+  }, [fuelings, maintenances, dailyRoutes, routes, tickets, agregadoSaidas]);
 
   const fleetAlerts = useMemo(() => {
     const alerts: { vehicle: Vehicle; task: PreventiveTask; reason: string }[] = [];
@@ -159,6 +201,46 @@ const AdminPending: React.FC<AdminPendingProps> = ({
       adminAprovadorId: currentUser.id
     });
     setRejectId(null);
+    setMotivo('');
+  };
+
+  const handleApproveTicket = (id: string) => {
+    onUpdateTicket(id, {
+      status: ApprovalStatus.APROVADO,
+      adminId: currentUser.id,
+      approvedAt: new Date().toISOString(),
+      motivoRejeicao: undefined
+    });
+  };
+
+  const handleRejectTicket = (id: string) => {
+    if (!motivo) return alert("Motivo obrigatório");
+    onUpdateTicket(id, {
+      status: ApprovalStatus.REJEITADO,
+      adminId: currentUser.id,
+      motivoRejeicao: motivo
+    });
+    setRejectTicketId(null);
+    setMotivo('');
+  };
+
+  const handleApproveAgregadoSaida = (id: string) => {
+    onUpdateAgregadoSaida(id, {
+      status: ApprovalStatus.APROVADO,
+      adminId: currentUser.id,
+      approvedAt: new Date().toISOString(),
+      motivoRejeicao: undefined
+    });
+  };
+
+  const handleRejectAgregadoSaida = (id: string) => {
+    if (!motivo) return alert("Motivo obrigatório");
+    onUpdateAgregadoSaida(id, {
+      status: ApprovalStatus.REJEITADO,
+      adminId: currentUser.id,
+      motivoRejeicao: motivo
+    });
+    setRejectAgregadoSaidaId(null);
     setMotivo('');
   };
 
@@ -215,6 +297,12 @@ const AdminPending: React.FC<AdminPendingProps> = ({
         </button>
         <button onClick={() => setTab('financial')} className={`flex-1 min-w-[120px] py-2 px-4 rounded-lg font-bold text-xs transition-all ${tab === 'financial' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
           Financeiro ({pendingFinancial.length})
+        </button>
+        <button onClick={() => setTab('tickets')} className={`flex-1 min-w-[120px] py-2 px-4 rounded-lg font-bold text-xs transition-all ${tab === 'tickets' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+          Tickets ({pendingTickets.length})
+        </button>
+        <button onClick={() => setTab('agregado-saidas')} className={`flex-1 min-w-[140px] py-2 px-4 rounded-lg font-bold text-xs transition-all ${tab === 'agregado-saidas' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+          Saídas Agregado ({pendingAgregadoSaidas.length})
         </button>
         <button onClick={() => setTab('maintenance')} className={`flex-1 min-w-[120px] py-2 px-4 rounded-lg font-bold text-xs transition-all ${tab === 'maintenance' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
           Corretivas ({activeMaintenances.length})
@@ -344,6 +432,79 @@ const AdminPending: React.FC<AdminPendingProps> = ({
                     </div>
                   )}
                 </div>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
+
+      {tab === 'tickets' && (
+        <div className="grid grid-cols-1 gap-4">
+          {pendingTickets.length === 0 ? (
+            <div className="py-20 text-center text-slate-600 border border-dashed border-slate-800 rounded-2xl">Nenhum ticket pendente</div>
+          ) : (
+            pendingTickets.map(t => (
+              <Card key={t.id} className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-amber-400">{t.numeroTicket}</span>
+                    <Badge status={t.status}>{t.status}</Badge>
+                  </div>
+                  <div className="text-sm text-slate-400">OC {t.oc} • NF {t.notaFiscal || '—'} • Placa {t.placa}</div>
+                  <div className="text-sm text-slate-400">Motorista: {t.motoristaNome || getUserName(t.motoristaId)}</div>
+                  <div className="text-xs text-slate-500 uppercase font-bold tracking-widest">Solicitado em: {new Date(t.createdAt).toLocaleString()}</div>
+                  <div className="text-slate-300">{t.motivo}</div>
+                </div>
+                {rejectTicketId === t.id ? (
+                  <div className="w-full md:w-64 space-y-2">
+                    <Input label="Motivo Rejeição" value={motivo} onChange={setMotivo} placeholder="Obrigatório..." />
+                    <div className="flex gap-2">
+                      <button onClick={() => handleRejectTicket(t.id)} className="flex-1 bg-red-600 py-2 rounded font-bold text-sm">Confirmar</button>
+                      <button onClick={() => setRejectTicketId(null)} className="flex-1 bg-slate-800 py-2 rounded font-bold text-sm">Voltar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    <button onClick={() => handleApproveTicket(t.id)} className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-bold">Aprovar</button>
+                    <button onClick={() => setRejectTicketId(t.id)} className="flex-1 md:flex-none bg-red-900/40 text-red-400 border border-red-900 px-6 py-3 rounded-xl font-bold">Rejeitar</button>
+                  </div>
+                )}
+              </Card>
+            ))
+          )}
+        </div>
+      )}
+
+      {tab === 'agregado-saidas' && (
+        <div className="grid grid-cols-1 gap-4">
+          {pendingAgregadoSaidas.length === 0 ? (
+            <div className="py-20 text-center text-slate-600 border border-dashed border-slate-800 rounded-2xl">Nenhuma saída pendente</div>
+          ) : (
+            pendingAgregadoSaidas.map(s => (
+              <Card key={s.id} className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-purple-400">{s.placa}</span>
+                    <Badge status={s.status}>{s.status}</Badge>
+                  </div>
+                  <div className="text-sm text-slate-400">OC {s.oc} • Destino {s.destino}</div>
+                  <div className="text-sm text-slate-400">Agregado: {s.createdByNome || getUserName(s.createdById)}</div>
+                  <div className="text-xs text-slate-500 uppercase font-bold tracking-widest">Solicitado em: {new Date(s.createdAt).toLocaleString()}</div>
+                </div>
+                {rejectAgregadoSaidaId === s.id ? (
+                  <div className="w-full md:w-64 space-y-2">
+                    <Input label="Motivo Rejeição" value={motivo} onChange={setMotivo} placeholder="Obrigatório..." />
+                    <div className="flex gap-2">
+                      <button onClick={() => handleRejectAgregadoSaida(s.id)} className="flex-1 bg-red-600 py-2 rounded font-bold text-sm">Confirmar</button>
+                      <button onClick={() => setRejectAgregadoSaidaId(null)} className="flex-1 bg-slate-800 py-2 rounded font-bold text-sm">Voltar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    <button onClick={() => handleApproveAgregadoSaida(s.id)} className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-bold">Aprovar</button>
+                    <button onClick={() => setRejectAgregadoSaidaId(s.id)} className="flex-1 md:flex-none bg-red-900/40 text-red-400 border border-red-900 px-6 py-3 rounded-xl font-bold">Rejeitar</button>
+                  </div>
+                )}
               </Card>
             ))
           )}

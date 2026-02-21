@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   User, UserSession, UserRole, Fueling, MaintenanceRequest,
   RouteDeparture, Vehicle, DailyRoute, Toll, Customer,
-  FixedExpense, AgregadoFreight, Agregado, Ticket,
+  FixedExpense, AgregadoFreight, Agregado, Ticket, AgregadoSaida,
   FuelingStatus, MaintenanceStatus, RouteStatus, FinanceiroStatus
 } from './types';
 import { INITIAL_USERS, INITIAL_VEHICLES, INITIAL_CUSTOMERS } from './constants';
@@ -10,7 +10,7 @@ import { Logo } from './components/UI';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DriverLocationSender } from './components/DriverLocationSender';
 import { supabase, isSupabaseOnline } from './supabase';
-import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase, deleteFuelingFromSupabase, deleteMaintenanceFromSupabase, deleteDailyRouteFromSupabase, deleteRouteFromSupabase, deleteTollFromSupabase, deleteFixedExpenseFromSupabase, deleteAgregadoFreightFromSupabase } from './supabase/sync';
+import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase, deleteFuelingFromSupabase, deleteMaintenanceFromSupabase, deleteDailyRouteFromSupabase, deleteRouteFromSupabase, deleteTollFromSupabase, deleteFixedExpenseFromSupabase, deleteAgregadoFreightFromSupabase, deleteTicketFromSupabase, deleteAgregadoSaidaFromSupabase } from './supabase/sync';
 import { RefreshCw } from 'lucide-react';
 import AdminFuelingForm from './pages/AdminFuelingForm';
 
@@ -79,6 +79,10 @@ const App: React.FC = () => {
   });
   const [tickets, setTickets] = useState<Ticket[]>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_tickets') : null;
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [agregadoSaidas, setAgregadoSaidas] = useState<AgregadoSaida[]>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_agregado_saidas') : null;
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -293,7 +297,7 @@ const App: React.FC = () => {
       !data.users.length && !data.vehicles.length && !data.customers.length &&
       !data.fuelings.length && !data.maintenances.length && !data.routes.length &&
       !data.dailyRoutes.length && !data.fixedExpenses.length && !data.agregados.length &&
-      !data.agregadoFreights.length && !data.tolls.length && !data.tickets.length;
+      !data.agregadoFreights.length && !data.tolls.length && !data.tickets.length && !data.agregadoSaidas.length;
     if (!supabaseVazio) {
       setUsers((prev) => mergeUsers(prev, data.users));
       setVehicles(data.vehicles);
@@ -307,6 +311,7 @@ const App: React.FC = () => {
       setAgregadoFreights((prev) => mergeAgregadoFreights(prev, data.agregadoFreights));
       setTolls(data.tolls);
       setTickets(data.tickets);
+      setAgregadoSaidas(data.agregadoSaidas);
     }
     setDbOnline(true);
   }, []);
@@ -353,14 +358,15 @@ const App: React.FC = () => {
     localStorage.setItem('pg_tolls', JSON.stringify(tolls));
     localStorage.setItem('pg_antonio_equipe', JSON.stringify(antonioEquipe));
     localStorage.setItem('pg_tickets', JSON.stringify(tickets));
+    localStorage.setItem('pg_agregado_saidas', JSON.stringify(agregadoSaidas));
 
     if (supabase && dbOnline) {
       syncAllToSupabase(supabase, {
         users, vehicles, customers, fuelings, maintenances,
-        routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls, tickets
+        routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls, tickets, agregadoSaidas
       });
     }
-  }, [users, vehicles, customers, fuelings, maintenances, routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls, tickets, antonioEquipe, dbOnline]);
+  }, [users, vehicles, customers, fuelings, maintenances, routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls, tickets, agregadoSaidas, antonioEquipe, dbOnline]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -451,6 +457,8 @@ const App: React.FC = () => {
   const AdminMaintenanceDone = React.lazy(() => import('./pages/AdminMaintenanceDone'));
   const AdminTicketForm = React.lazy(() => import('./pages/AdminTicketForm'));
   const AdminTicketReport = React.lazy(() => import('./pages/AdminTicketReport'));
+  const AgregadoTicketForm = React.lazy(() => import('./pages/AgregadoTicketForm'));
+  const AgregadoSaidaForm = React.lazy(() => import('./pages/AgregadoSaidaForm'));
   const FuelingRegistry = React.lazy(() => import('./pages/FuelingRegistry'));
   const HelperRouteBinding = React.lazy(() => import('./pages/HelperRouteBinding'));
   const TechnicalDocs = React.lazy(() => import('./pages/TechnicalDocs'));
@@ -502,9 +510,9 @@ const App: React.FC = () => {
       case 'admin-dashboard':
         return <AdminDashboard fuelings={fuelingsGeral} maintenances={maintenancesGeral} vehicles={vehicles} fixedExpenses={fixedExpenses} dailyRoutes={dailyRoutesGeral} routes={routesGeral} agregadoFreights={agregadoFreightsGeral} tolls={tollsGeral} onBack={() => navigate('operation')} />;
       case 'admin-pending':
-        return <AdminPending fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} vehicles={vehicles} users={users} currentUser={currentUser} onUpdateFueling={(id, up) => updateRecord(setFuelings, id, up)} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} onDeleteFueling={async (id) => { if (supabase) await deleteFuelingFromSupabase(supabase, id); deleteRecord(setFuelings, id); }} onDeleteMaintenance={async (id) => { if (supabase) await deleteMaintenanceFromSupabase(supabase, id); deleteRecord(setMaintenances, id); }} onDeleteDailyRoute={async (id) => { if (supabase) await deleteDailyRouteFromSupabase(supabase, id); deleteRecord(setDailyRoutes, id); }} onDeleteRoute={async (id) => { if (supabase) await deleteRouteFromSupabase(supabase, id); deleteRecord(setRoutes, id); }} onBack={() => navigate('operation')} />;
+        return <AdminPending fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} tickets={tickets} agregadoSaidas={agregadoSaidas} vehicles={vehicles} users={users} currentUser={currentUser} onUpdateFueling={(id, up) => updateRecord(setFuelings, id, up)} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} onUpdateTicket={(id, up) => updateRecord(setTickets, id, up)} onUpdateAgregadoSaida={(id, up) => updateRecord(setAgregadoSaidas, id, up)} onDeleteFueling={async (id) => { if (supabase) await deleteFuelingFromSupabase(supabase, id); deleteRecord(setFuelings, id); }} onDeleteMaintenance={async (id) => { if (supabase) await deleteMaintenanceFromSupabase(supabase, id); deleteRecord(setMaintenances, id); }} onDeleteDailyRoute={async (id) => { if (supabase) await deleteDailyRouteFromSupabase(supabase, id); deleteRecord(setDailyRoutes, id); }} onDeleteRoute={async (id) => { if (supabase) await deleteRouteFromSupabase(supabase, id); deleteRecord(setRoutes, id); }} onDeleteTicket={async (id) => { if (supabase) await deleteTicketFromSupabase(supabase, id); deleteRecord(setTickets, id); }} onDeleteAgregadoSaida={async (id) => { if (supabase) await deleteAgregadoSaidaFromSupabase(supabase, id); deleteRecord(setAgregadoSaidas, id); }} onBack={() => navigate('operation')} />;
       case 'user-mgmt':
-        return <UserManagement users={users} onSaveUser={onSaveUser} onDeleteUser={async (id) => { if (supabase) await deleteUserFromSupabase(supabase, id); setUsers(prev => prev.filter(u => u.id !== id)); }} onBack={() => navigate('operation')} />;
+        return <UserManagement users={users} agregados={agregados} onSaveUser={onSaveUser} onDeleteUser={async (id) => { if (supabase) await deleteUserFromSupabase(supabase, id); setUsers(prev => prev.filter(u => u.id !== id)); }} onBack={() => navigate('operation')} />;
       case 'vehicle-mgmt':
         return <VehicleManagement vehicles={vehicles} onSaveVehicle={onSaveVehicle} onUpdateVehicle={(id, up) => updateRecord(setVehicles, id, up)} onBack={() => navigate('operation')} />;
       case 'admin-customers':
@@ -515,6 +523,10 @@ const App: React.FC = () => {
         return <AdminAgregadoFreight agregados={agregados} customers={customers} users={users} antonioEquipe={antonioEquipe} onSubmit={(f) => saveRecord(setAgregadoFreights, f)} onBack={() => navigate('operation')} />;
       case 'admin-agregado-report':
         return <AdminAgregadoReport freights={agregadoFreights} onBack={() => navigate('operation')} />;
+      case 'agregado-ticket-create':
+        return <AgregadoTicketForm currentUser={currentUser} agregados={agregados} users={users} onSubmit={(t) => { saveRecord(setTickets, t); navigate('operation'); }} onBack={() => navigate('operation')} />;
+      case 'agregado-saida-create':
+        return <AgregadoSaidaForm currentUser={currentUser} agregados={agregados} onSubmit={(s) => { saveRecord(setAgregadoSaidas, s); navigate('operation'); }} onBack={() => navigate('operation')} />;
       case 'admin-tolls':
         return <AdminTollManagement tolls={tolls} vehicles={vehicles} onUpdateTolls={setTolls} onUpdateVehicle={(id, up) => updateRecord(setVehicles, id, up)} onBack={() => navigate('operation')} />;
       case 'admin-fixed-expenses':
@@ -532,7 +544,7 @@ const App: React.FC = () => {
       case 'admin-maintenance-done':
         return <AdminMaintenanceDone maintenances={maintenances} vehicles={vehicles} currentUser={currentUser} onAddMaintenance={(m) => saveRecord(setMaintenances, m)} onBack={() => navigate('operation')} />;
       case 'admin-ticket-create':
-        return <AdminTicketForm users={users} vehicles={vehicles} onSubmit={(t) => { saveRecord(setTickets, t); navigate('operation'); }} onBack={() => navigate('operation')} />;
+        return <AdminTicketForm users={users} vehicles={vehicles} createdById={currentUser?.id} createdByNome={currentUser?.nome} onSubmit={(t) => { saveRecord(setTickets, t); navigate('operation'); }} onBack={() => navigate('operation')} />;
       case 'admin-ticket-report':
         return <AdminTicketReport tickets={tickets} users={users} vehicles={vehicles} onBack={() => navigate('operation')} />;
       case 'admin-tracking':
@@ -581,7 +593,7 @@ const App: React.FC = () => {
       case 'tech-docs':
         return <TechnicalDocs onBack={() => navigate('operation')} />;
       default:
-        return <OperationHome user={currentUser} session={session} fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} onNavigate={navigate} onLogout={handleLogout} />;
+        return <OperationHome user={currentUser} session={session} fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} tickets={tickets} agregadoSaidas={agregadoSaidas} onNavigate={navigate} onLogout={handleLogout} />;
     }
   };
 
