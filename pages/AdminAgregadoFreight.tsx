@@ -24,8 +24,6 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const [conta, setConta] = useState<'geral' | 'antonio'>('geral');
   const [motoristaId, setMotoristaId] = useState('');
   const [ajudanteId, setAjudanteId] = useState('');
-  const [motoristaNomeManual, setMotoristaNomeManual] = useState('');
-  const [ajudanteNomeManual, setAjudanteNomeManual] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedAgregado = useMemo(
@@ -53,17 +51,14 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
     }
   }, [selectedAgregado, isAntonio]);
 
-  const motoristasOptions = useMemo(() => {
-    const list = users.filter(u => String(u.perfil).toLowerCase() === UserRole.MOTORISTA).map(u => ({ label: u.nome, value: u.id }));
-    if (list.length > 0) return list;
-    return users.map(u => ({ label: `${u.nome} (${u.perfil})`, value: u.id }));
-  }, [users]);
-  const ajudantesOptions = useMemo(() => {
-    const list = users.filter(u => String(u.perfil).toLowerCase() === UserRole.AJUDANTE).map(u => ({ label: u.nome, value: u.id }));
-    if (list.length > 0) return list;
-    return users.map(u => ({ label: `${u.nome} (${u.perfil})`, value: u.id }));
-  }, [users]);
-  const hasUsersOptions = motoristasOptions.length > 0 || ajudantesOptions.length > 0;
+  const motoristasOptions = useMemo(
+    () => users.filter(u => u.ativo && u.perfil === UserRole.MOTORISTA).map(u => ({ label: u.nome, value: u.id })),
+    [users]
+  );
+  const ajudantesOptions = useMemo(
+    () => users.filter(u => u.ativo && u.perfil === UserRole.AJUDANTE).map(u => ({ label: u.nome, value: u.id })),
+    [users]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,22 +67,14 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
-    if (isAntonio && (!valorMotorista || !valorAjudante)) {
-      alert("Preencha todos os campos obrigatórios.");
-      return;
-    }
-    if (isAntonio && hasUsersOptions && (!motoristaId || !ajudanteId)) {
-      alert("Selecione motorista e ajudante.");
-      return;
-    }
-    if (isAntonio && !hasUsersOptions && (!motoristaNomeManual || !ajudanteNomeManual)) {
+    if (isAntonio && (!valorMotorista || !valorAjudante || !motoristaId || !ajudanteId)) {
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
 
     if (!selectedAgregado) return;
-    const motoristaNome = hasUsersOptions ? (users.find(u => u.id === motoristaId)?.nome ?? '') : motoristaNomeManual.trim();
-    const ajudanteNome = hasUsersOptions ? (users.find(u => u.id === ajudanteId)?.nome ?? '') : ajudanteNomeManual.trim();
+    const motoristaNome = users.find(u => u.id === motoristaId)?.nome ?? '';
+    const ajudanteNome = users.find(u => u.id === ajudanteId)?.nome ?? '';
 
     const newFreight: AgregadoFreight = {
       id: crypto.randomUUID(),
@@ -102,8 +89,8 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       conta,
       valorMotorista: valorMotorista ? Number(valorMotorista) : undefined,
       valorAjudante: valorAjudante ? Number(valorAjudante) : undefined,
-      motoristaId: hasUsersOptions ? (motoristaId || undefined) : undefined,
-      ajudanteId: hasUsersOptions ? (ajudanteId || undefined) : undefined,
+      motoristaId: motoristaId || undefined,
+      ajudanteId: ajudanteId || undefined,
       motoristaNome: motoristaNome || undefined,
       ajudanteNome: ajudanteNome || undefined,
       createdAt: new Date().toISOString()
@@ -198,41 +185,20 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
                   required
                   placeholder="0.00"
                 />
-                {hasUsersOptions ? (
-                  <>
-                    <Select
-                      label="Motorista"
-                      value={motoristaId}
-                      onChange={setMotoristaId}
-                      options={motoristasOptions}
-                      required
-                    />
-                    <Select
-                      label="Ajudante"
-                      value={ajudanteId}
-                      onChange={setAjudanteId}
-                      options={ajudantesOptions}
-                      required
-                    />
-                  </>
-                ) : (
-                  <>
-                    <Input
-                      label="Motorista (nome)"
-                      value={motoristaNomeManual}
-                      onChange={setMotoristaNomeManual}
-                      required
-                      placeholder="Nome do motorista"
-                    />
-                    <Input
-                      label="Ajudante (nome)"
-                      value={ajudanteNomeManual}
-                      onChange={setAjudanteNomeManual}
-                      required
-                      placeholder="Nome do ajudante"
-                    />
-                  </>
-                )}
+                <Select
+                  label="Motorista"
+                  value={motoristaId}
+                  onChange={setMotoristaId}
+                  options={motoristasOptions}
+                  required
+                />
+                <Select
+                  label="Ajudante"
+                  value={ajudanteId}
+                  onChange={setAjudanteId}
+                  options={ajudantesOptions}
+                  required
+                />
               </>
             )}
           </div>
@@ -275,7 +241,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               type="submit"
               onClick={() => {}}
               variant="primary" 
-              disabled={isSubmitting || !agregadoId || !valorFrete || !valorAgregado || !oc || !rota || (isAntonio && (!valorMotorista || !valorAjudante || (hasUsersOptions ? (!motoristaId || !ajudanteId) : (!motoristaNomeManual || !ajudanteNomeManual))))}
+              disabled={isSubmitting || !agregadoId || !valorFrete || !valorAgregado || !oc || !rota || (isAntonio && (!valorMotorista || !valorAjudante || !motoristaId || !ajudanteId))}
             >
               CONFIRMAR LANÇAMENTO
             </BigButton>
