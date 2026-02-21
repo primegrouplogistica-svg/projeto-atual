@@ -103,7 +103,7 @@ export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<All
 
 export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData): Promise<void> {
   try {
-    await Promise.all([
+    const results = await Promise.all([
       data.users.length ? supabase.from('users').upsert(data.users.map(mapUserToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.vehicles.length ? supabase.from('vehicles').upsert(data.vehicles.map(mapVehicleToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.customers.length ? supabase.from('customers').upsert(data.customers.map(mapCustomerToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
@@ -116,6 +116,24 @@ export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData)
       data.agregadoFreights.length ? supabase.from('agregado_freights').upsert(data.agregadoFreights.map(mapAgregadoFreightToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.tolls.length ? supabase.from('tolls').upsert(data.tolls.map(mapTollToDb), { onConflict: 'id' }) : Promise.resolve({ error: null })
     ]);
+    const labels = [
+      'users',
+      'vehicles',
+      'customers',
+      'fuelings',
+      'maintenance_requests',
+      'daily_routes',
+      'route_departures',
+      'fixed_expenses',
+      'agregados',
+      'agregado_freights',
+      'tolls'
+    ];
+    results.forEach((res: any, idx: number) => {
+      if (res?.error) {
+        console.error(`[Prime] Supabase sync error (${labels[idx]}):`, res.error?.message || res.error);
+      }
+    });
   } catch (e) {
     console.error('syncAllToSupabase:', e);
   }
