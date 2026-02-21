@@ -207,6 +207,36 @@ const App: React.FC = () => {
         return true;
       });
     };
+    const mergeById = <T extends { id?: string }>(prev: T[], incoming: T[]) => {
+      const byId = new Map<string, T>();
+      uniqById(incoming).forEach((item) => {
+        if (item?.id) byId.set(item.id, item);
+      });
+      prev.forEach((item) => {
+        if (!item?.id) return;
+        if (!byId.has(item.id)) byId.set(item.id, item);
+      });
+      return Array.from(byId.values());
+    };
+    const mergeAgregadoFreights = (prev: AgregadoFreight[], incoming: AgregadoFreight[]) => {
+      const byId = new Map<string, AgregadoFreight>();
+      uniqById(incoming).forEach((item) => {
+        if (item?.id) byId.set(item.id, item);
+      });
+      prev.forEach((item) => {
+        if (!item?.id) return;
+        const existing = byId.get(item.id);
+        if (!existing) {
+          byId.set(item.id, item);
+          return;
+        }
+        byId.set(item.id, {
+          ...existing,
+          rota: existing.rota?.trim() ? existing.rota : item.rota
+        });
+      });
+      return Array.from(byId.values());
+    };
     const supabaseVazio =
       !data.users.length && !data.vehicles.length && !data.customers.length &&
       !data.fuelings.length && !data.maintenances.length && !data.routes.length &&
@@ -221,8 +251,8 @@ const App: React.FC = () => {
       setRoutes(data.routes);
       setDailyRoutes(data.dailyRoutes);
       setFixedExpenses(data.fixedExpenses);
-      setAgregados(data.agregados);
-      setAgregadoFreights(uniqById(data.agregadoFreights));
+      setAgregados((prev) => mergeById(prev, data.agregados));
+      setAgregadoFreights((prev) => mergeAgregadoFreights(prev, data.agregadoFreights));
       setTolls(data.tolls);
     }
     setDbOnline(true);
