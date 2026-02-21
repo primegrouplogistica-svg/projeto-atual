@@ -99,7 +99,19 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
         : endDate
           ? `até ${endDate}`
           : 'todo o período';
-    const msg = `📋 *Resumo - ${item.nome}*\nPlaca: ${item.placa}\n\n*Total a pagar (${periodo}):* R$ ${item.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n\n_Prime Group_`;
+    const linhas = filtered.filter(f =>
+      (f.nomeAgregado || 'Sem nome') === item.nome &&
+      (f.placa || '—') === item.placa
+    );
+    let msg = `📋 *Resumo - ${item.nome}*\nPlaca: ${item.placa}\nPeríodo: ${periodo}\n\n`;
+    linhas.forEach(f => {
+      const data = formatDateBr(f.data);
+      const oc = f.oc || '—';
+      const rota = f.rota || '—';
+      const valor = Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      msg += `• ${data} | OC ${oc} | Rota ${rota} → R$ ${valor}\n`;
+    });
+    msg += `\n*Total a pagar:* R$ ${item.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n\n_Prime Group_`;
     navigator.clipboard.writeText(msg).then(() => {
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(null), 2000);
