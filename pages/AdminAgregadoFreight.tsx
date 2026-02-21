@@ -6,12 +6,12 @@ import { todayLocalDateInput } from '../utils/date';
 
 interface AdminAgregadoFreightProps {
   agregados: Agregado[];
-  users: User[];
+  users?: User[];
   onSubmit: (freight: AgregadoFreight) => void;
   onBack: () => void;
 }
 
-const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, users, onSubmit, onBack }) => {
+const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, users = [], onSubmit, onBack }) => {
   const [agregadoId, setAgregadoId] = useState('');
   const [placa, setPlaca] = useState('');
   const [valorFrete, setValorFrete] = useState('');
