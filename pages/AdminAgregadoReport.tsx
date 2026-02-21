@@ -119,9 +119,9 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
     freightsPorPlaca.forEach(f => {
       const data = formatDateBr(f.data);
       const oc = f.oc || '—';
-      const dest = f.destino || '—';
+      const rota = f.rota || '—';
       const valor = Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-      msg += `• ${data} | OC ${oc} | ${dest} → R$ ${valor}\n`;
+      msg += `• ${data} | OC ${oc} | Rota ${rota} → R$ ${valor}\n`;
     });
     msg += `\n*Total a pagar: R$ ${resumoPlacaSelecionada.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n\n_Prime Group_`;
     navigator.clipboard.writeText(msg).then(() => {

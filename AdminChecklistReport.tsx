@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AgregadoFreight, Agregado } from '../types';
 import { Card, Input, BigButton, Select } from '../components/UI';
+import { todayLocalDateInput } from '../utils/date';
 
 interface AdminAgregadoFreightProps {
   agregados: Agregado[];
@@ -14,8 +15,9 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const [placa, setPlaca] = useState('');
   const [valorFrete, setValorFrete] = useState('');
   const [valorAgregado, setValorAgregado] = useState('');
-  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [data, setData] = useState(todayLocalDateInput());
   const [oc, setOc] = useState('');
+  const [rota, setRota] = useState('');
 
   // Auto-fill placa when agregado is selected
   useEffect(() => {
@@ -29,7 +31,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agregadoId || !valorFrete || !valorAgregado || !data || !oc) {
+    if (!agregadoId || !valorFrete || !valorAgregado || !data || !oc || !rota) {
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
@@ -46,6 +48,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       valorAgregado: Number(valorAgregado),
       data,
       oc,
+      rota,
       createdAt: new Date().toISOString()
     };
 
@@ -102,6 +105,13 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               required 
               placeholder="Ex: OC-8855" 
             />
+            <Input
+              label="Rota"
+              value={rota}
+              onChange={setRota}
+              required
+              placeholder="Ex: SP → RJ"
+            />
           </div>
 
           <div className="border-t border-slate-800 pt-6 space-y-4">
@@ -142,7 +152,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               type="submit"
               onClick={() => {}}
               variant="primary" 
-              disabled={!agregadoId || !valorFrete || !valorAgregado || !oc}
+              disabled={!agregadoId || !valorFrete || !valorAgregado || !oc || !rota}
             >
               CONFIRMAR LANÇAMENTO
             </BigButton>

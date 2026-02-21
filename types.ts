@@ -90,6 +90,7 @@ export interface AgregadoFreight {
   valorFrete: number;
   valorAgregado: number;
   oc: string;
+  rota?: string;
   data: string;
   createdAt: string;
 }

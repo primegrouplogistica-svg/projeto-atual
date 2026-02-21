@@ -301,6 +301,7 @@ export function mapAgregadoFreightFromDb(row: any) {
     valorFrete: Number(row.valor_frete),
     valorAgregado: Number(row.valor_agregado),
     oc: row.oc,
+    rota: row.rota ?? '',
     data: row.data,
     createdAt: row.created_at
   };
@@ -314,6 +315,7 @@ export function mapAgregadoFreightToDb(f: any) {
     valor_frete: f.valorFrete,
     valor_agregado: f.valorAgregado,
     oc: f.oc,
+    rota: f.rota ?? null,
     data: f.data,
     created_at: f.createdAt
   };
