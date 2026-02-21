@@ -131,10 +131,11 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
     let msg = `📋 *Resumo - ${resumoPlacaSelecionada.nome}*\nPlaca: ${resumoPlacaSelecionada.placa}\nPeríodo: ${periodo}\n\n`;
     freightsPorPlaca.forEach(f => {
       const data = formatDateBr(f.data);
+      const cliente = f.clienteNome || '—';
       const oc = f.oc || '—';
       const rota = f.rota || '—';
       const valor = Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-      msg += `• ${data} | OC ${oc} | Rota ${rota} → R$ ${valor}\n`;
+      msg += `• ${data} | Cliente ${cliente} | OC ${oc} | Rota ${rota} → R$ ${valor}\n`;
     });
     msg += `\n*Total a pagar: R$ ${resumoPlacaSelecionada.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n\n_Prime Group_`;
     navigator.clipboard.writeText(msg).then(() => {
@@ -187,8 +188,9 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
                   <thead className="bg-slate-950 text-[10px] font-black uppercase text-slate-500 tracking-widest">
                     <tr>
                       <th className="p-3">Data</th>
+                      <th className="p-3">Cliente</th>
                       <th className="p-3">OC</th>
-                      <th className="p-3">Destino</th>
+                      <th className="p-3">Rota</th>
                       <th className="p-3 text-right">Valor a pagar</th>
                     </tr>
                   </thead>
@@ -196,8 +198,9 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
                     {freightsPorPlaca.map(f => (
                       <tr key={f.id} className="border-t border-slate-800 hover:bg-slate-800/50">
                         <td className="p-3 font-mono text-slate-300">{formatDateBr(f.data)}</td>
+                        <td className="p-3 text-slate-300">{f.clienteNome || '—'}</td>
                         <td className="p-3 font-bold text-slate-200">{f.oc || '—'}</td>
-                        <td className="p-3 text-slate-400">{f.destino || '—'}</td>
+                        <td className="p-3 text-slate-400">{f.rota || '—'}</td>
                         <td className="p-3 text-right font-black text-red-400">R$ {Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                       </tr>
                     ))}
