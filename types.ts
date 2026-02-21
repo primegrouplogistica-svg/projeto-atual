@@ -45,6 +45,8 @@ export interface User {
   perfil: UserRole;
   ativo: boolean;
   permissoes?: string[];
+  /** Equipe de faturamento */
+  equipeTipo?: 'geral' | 'antonio' | 'ambos';
 }
 
 /** Localização em tempo real do motorista (celular). */

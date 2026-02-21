@@ -12,7 +12,8 @@ export function mapUserFromDb(row: any) {
     senha: row.senha,
     perfil: row.perfil,
     ativo: row.ativo ?? true,
-    permissoes: row.permissoes ?? []
+    permissoes: row.permissoes ?? [],
+    equipeTipo: row.equipe_tipo ?? 'geral'
   };
 }
 
@@ -24,7 +25,8 @@ export function mapUserToDb(u: any) {
     senha: u.senha ?? null,
     perfil: u.perfil,
     ativo: u.ativo ?? true,
-    permissoes: u.permissoes ?? []
+    permissoes: u.permissoes ?? [],
+    equipe_tipo: u.equipeTipo ?? 'geral'
   };
 }
 

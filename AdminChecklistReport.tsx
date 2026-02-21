@@ -51,15 +51,25 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   }, [selectedAgregado, isAntonio]);
 
   const motoristasOptions = useMemo(() => {
+    const equipe = isAntonio ? 'antonio' : 'geral';
     return users
       .filter(u => String(u.perfil || '').toLowerCase().includes(UserRole.MOTORISTA))
+      .filter(u => {
+        const tipo = u.equipeTipo || 'geral';
+        return tipo === equipe || tipo === 'ambos';
+      })
       .map(u => ({ label: u.nome, value: u.id }));
-  }, [users]);
+  }, [users, isAntonio]);
   const ajudantesOptions = useMemo(() => {
+    const equipe = isAntonio ? 'antonio' : 'geral';
     return users
       .filter(u => String(u.perfil || '').toLowerCase().includes(UserRole.AJUDANTE))
+      .filter(u => {
+        const tipo = u.equipeTipo || 'geral';
+        return tipo === equipe || tipo === 'ambos';
+      })
       .map(u => ({ label: u.nome, value: u.id }));
-  }, [users]);
+  }, [users, isAntonio]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

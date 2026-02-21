@@ -67,12 +67,13 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [perfil, setPerfil] = useState<UserRole>(UserRole.MOTORISTA);
+  const [equipeTipo, setEquipeTipo] = useState<'geral' | 'antonio' | 'ambos'>('geral');
   const [senha, setSenha] = useState('');
   const [permissoes, setPermissoes] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   const resetForm = () => {
-    setNome(''); setEmail(''); setPerfil(UserRole.MOTORISTA); setSenha(''); setPermissoes([]); setEditingUser(null); setShowForm(false);
+    setNome(''); setEmail(''); setPerfil(UserRole.MOTORISTA); setEquipeTipo('geral'); setSenha(''); setPermissoes([]); setEditingUser(null); setShowForm(false);
   };
 
   const handleEditClick = (user: User) => {
@@ -80,6 +81,7 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
     setNome(user.nome);
     setEmail(user.email);
     setPerfil(user.perfil);
+    setEquipeTipo(user.equipeTipo || 'geral');
     setSenha(user.senha || '');
     setPermissoes(user.permissoes || []);
     setShowForm(true);
@@ -112,7 +114,8 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
       senha,
       perfil,
       ativo: editingUser ? editingUser.ativo : true,
-      permissoes: perfil === UserRole.CUSTOM_ADMIN ? permissoes : undefined
+      permissoes: perfil === UserRole.CUSTOM_ADMIN ? permissoes : undefined,
+      equipeTipo: perfil === UserRole.MOTORISTA || perfil === UserRole.AJUDANTE ? equipeTipo : 'geral'
     };
     await onSaveUser(userToSave);
     setIsSaving(false);
@@ -155,6 +158,19 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
                 ]}
                 required
               />
+              {(perfil === UserRole.MOTORISTA || perfil === UserRole.AJUDANTE) && (
+                <Select
+                  label="Equipe"
+                  value={equipeTipo}
+                  onChange={(v) => setEquipeTipo(v as 'geral' | 'antonio' | 'ambos')}
+                  options={[
+                    { label: 'Geral', value: 'geral' },
+                    { label: 'Antonio', value: 'antonio' },
+                    { label: 'Ambos', value: 'ambos' }
+                  ]}
+                  required
+                />
+              )}
               <Input label="Senha de Acesso" type="text" value={senha} onChange={setSenha} required placeholder="Mínimo 3 caracteres" />
             </div>
 
@@ -208,7 +224,12 @@ const UserManagement: React.FC<UserMgmtProps> = ({ users, onSaveUser, onDeleteUs
                 <div className="font-black text-slate-100 group-hover:text-blue-400 transition-colors uppercase tracking-tight">{u.nome}</div>
                 <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">{u.email || 'Sem email cadastrado'}</div>
               </div>
-              <Badge status={u.ativo ? 'rodando' : 'rejeitado'}>{u.perfil}</Badge>
+              <div className="flex flex-col items-end gap-1">
+                <Badge status={u.ativo ? 'rodando' : 'rejeitado'}>{u.perfil}</Badge>
+                {(u.perfil === UserRole.MOTORISTA || u.perfil === UserRole.AJUDANTE) && (
+                  <span className="text-[9px] text-amber-400 font-black uppercase">{u.equipeTipo || 'geral'}</span>
+                )}
+              </div>
             </div>
 
             <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 mb-4 flex justify-between items-center">

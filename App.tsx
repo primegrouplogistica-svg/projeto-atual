@@ -58,6 +58,10 @@ const App: React.FC = () => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_fixed_expenses') : null;
     return saved ? JSON.parse(saved) : [];
   });
+  const [antonioEquipe, setAntonioEquipe] = useState<{ motoristas: string[]; ajudantes: string[] }>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_antonio_equipe') : null;
+    return saved ? JSON.parse(saved) : { motoristas: [], ajudantes: [] };
+  });
 
   const [agregados, setAgregados] = useState<Agregado[]>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_agregados') : null;
@@ -325,6 +329,7 @@ const App: React.FC = () => {
     localStorage.setItem('pg_agregados', JSON.stringify(agregados));
     localStorage.setItem('pg_agregado_freights', JSON.stringify(agregadoFreights));
     localStorage.setItem('pg_tolls', JSON.stringify(tolls));
+    localStorage.setItem('pg_antonio_equipe', JSON.stringify(antonioEquipe));
 
     if (supabase && dbOnline) {
       syncAllToSupabase(supabase, {
@@ -332,7 +337,7 @@ const App: React.FC = () => {
         routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls
       });
     }
-  }, [users, vehicles, customers, fuelings, maintenances, routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls, dbOnline]);
+  }, [users, vehicles, customers, fuelings, maintenances, routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls, antonioEquipe, dbOnline]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -482,7 +487,7 @@ const App: React.FC = () => {
       case 'admin-agregado-mgmt':
         return <AdminAgregadoManagement agregados={agregados} onUpdateAgregados={setAgregados} onDeleteAgregado={async (id) => { if (supabase) await deleteAgregadoFromSupabase(supabase, id); setAgregados(prev => prev.filter(a => a.id !== id)); }} onBack={() => navigate('operation')} />;
       case 'admin-agregado-freight':
-        return <AdminAgregadoFreight agregados={agregados} onSubmit={(f) => saveRecord(setAgregadoFreights, f)} onBack={() => navigate('operation')} />;
+        return <AdminAgregadoFreight agregados={agregados} users={users} antonioEquipe={antonioEquipe} onSubmit={(f) => saveRecord(setAgregadoFreights, f)} onBack={() => navigate('operation')} />;
       case 'admin-agregado-report':
         return <AdminAgregadoReport freights={agregadoFreights} onBack={() => navigate('operation')} />;
       case 'admin-tolls':
@@ -536,6 +541,8 @@ const App: React.FC = () => {
           title="Faturamento Antonio"
           placasInfo={placasAntonio}
           modo="antonio"
+          antonioEquipe={antonioEquipe}
+          onUpdateAntonioEquipe={setAntonioEquipe}
           onBack={() => navigate('operation')}
         />;
       case 'admin-vehicle-report':
