@@ -109,6 +109,17 @@ export interface AgregadoFreight {
   createdAt: string;
 }
 
+export interface Ticket {
+  id: string;
+  numeroTicket: string;
+  oc: string;
+  motivo: string;
+  placa: string;
+  motoristaId: string;
+  motoristaNome?: string;
+  createdAt: string;
+}
+
 export interface PreventiveTask {
   id: string;
   descricao: string;

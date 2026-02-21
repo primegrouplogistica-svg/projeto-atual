@@ -25,7 +25,8 @@ import {
   Banknote,
   LayoutDashboard,
   Terminal,
-  MapPin
+  MapPin,
+  Ticket
 } from 'lucide-react';
 
 interface OperationHomeProps {
@@ -220,6 +221,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
               {hasPermission('admin-fueling') && <BigButton onClick={() => onNavigate('admin-fueling')} icon={<Fuel size={32} />} variant="indigo">Lançar combustível</BigButton>}
               {hasPermission('admin-fueling') && <BigButton onClick={() => onNavigate('admin-fueling-registry')} icon={<History size={32} />} variant="secondary">Registro de Abastecimentos</BigButton>}
               {hasPermission('admin-agregado-freight') && <BigButton onClick={() => onNavigate('admin-agregado-freight')} icon={<Truck size={32} />} variant="indigo">Frete Agregado</BigButton>}
+              {hasPermission('admin-ticket-create') && <BigButton onClick={() => onNavigate('admin-ticket-create')} icon={<Ticket size={32} />} variant="indigo">Lançar Ticket</BigButton>}
               {hasPermission('admin-tolls') && <BigButton onClick={() => onNavigate('admin-tolls')} icon={<Milestone size={32} />} variant="indigo">Pedágios</BigButton>}
 
               {/* CATEGORIA 3: RELATÓRIOS DE PERFORMANCE */}
@@ -229,6 +231,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
               {hasPermission('admin-payments-team') && <BigButton onClick={() => onNavigate('admin-payments-team')} icon={<Banknote size={32} />} variant="primary">Pagamentos Equipe</BigButton>}
               {hasPermission('admin-vehicle-report') && <BigButton onClick={() => onNavigate('admin-vehicle-report')} icon={<BarChart3 size={32} />} variant="secondary">Desempenho</BigButton>}
               {hasPermission('admin-agregado-report') && <BigButton onClick={() => onNavigate('admin-agregado-report')} icon={<LineChart size={32} />} variant="secondary">Agregados</BigButton>}
+              {hasPermission('admin-ticket-report') && <BigButton onClick={() => onNavigate('admin-ticket-report')} icon={<Ticket size={32} />} variant="secondary">Tickets</BigButton>}
               {hasPermission('admin-fixed-expenses') && <BigButton onClick={() => onNavigate('admin-fixed-expenses')} icon={<LineChart size={32} />} variant="secondary">Custos Fixos</BigButton>}
 
               {/* CATEGORIA 4: MANUTENÇÃO E FROTA */}

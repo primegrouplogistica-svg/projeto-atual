@@ -27,6 +27,7 @@ const PERMISSION_GROUPS = [
       { id: 'admin-create-route', label: 'Lançar Rota Manual (Motorista)' },
       { id: 'admin-fueling', label: 'Lançar Combustível' },
       { id: 'admin-agregado-freight', label: 'Lançar Frete Agregado' },
+      { id: 'admin-ticket-create', label: 'Lançar Ticket' },
       { id: 'admin-tolls', label: 'Gestão de Pedágios' },
     ]
   },
@@ -38,6 +39,7 @@ const PERMISSION_GROUPS = [
       { id: 'admin-payments-team', label: 'Pagamentos Motoristas e Ajudantes' },
       { id: 'admin-vehicle-report', label: 'Desempenho por Veículo' },
       { id: 'admin-agregado-report', label: 'Relatório de Agregados' },
+      { id: 'admin-ticket-report', label: 'Relatório de Tickets' },
       { id: 'admin-activity-report', label: 'Relatório por Colaborador' },
       { id: 'admin-fixed-expenses', label: 'Gestão de Despesas Fixas' },
     ]

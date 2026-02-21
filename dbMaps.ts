@@ -345,6 +345,33 @@ export function mapAgregadoFreightToDb(f: any) {
   };
 }
 
+export function mapTicketFromDb(row: any) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    numeroTicket: row.numero_ticket,
+    oc: row.oc,
+    motivo: row.motivo,
+    placa: row.placa,
+    motoristaId: row.motorista_id,
+    motoristaNome: row.motorista_nome ?? undefined,
+    createdAt: row.created_at
+  };
+}
+
+export function mapTicketToDb(t: any) {
+  return {
+    id: t.id,
+    numero_ticket: t.numeroTicket,
+    oc: t.oc,
+    motivo: t.motivo,
+    placa: t.placa,
+    motorista_id: t.motoristaId,
+    motorista_nome: t.motoristaNome ?? null,
+    created_at: t.createdAt
+  };
+}
+
 export function mapTollFromDb(row: any) {
   if (!row) return null;
   return {
