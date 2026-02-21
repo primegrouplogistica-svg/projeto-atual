@@ -198,6 +198,15 @@ const App: React.FC = () => {
 
   const applyLoadedData = useCallback((data: Awaited<ReturnType<typeof loadAllFromSupabase>>) => {
     if (!data) return;
+    const uniqById = <T extends { id?: string }>(list: T[]) => {
+      const seen = new Set<string>();
+      return list.filter((item) => {
+        if (!item?.id) return false;
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+    };
     const supabaseVazio =
       !data.users.length && !data.vehicles.length && !data.customers.length &&
       !data.fuelings.length && !data.maintenances.length && !data.routes.length &&
@@ -213,7 +222,7 @@ const App: React.FC = () => {
       setDailyRoutes(data.dailyRoutes);
       setFixedExpenses(data.fixedExpenses);
       setAgregados(data.agregados);
-      setAgregadoFreights(data.agregadoFreights);
+      setAgregadoFreights(uniqById(data.agregadoFreights));
       setTolls(data.tolls);
     }
     setDbOnline(true);

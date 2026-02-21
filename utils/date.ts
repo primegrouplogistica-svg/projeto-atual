@@ -1,5 +1,10 @@
 export function parseDateLocal(dateStr: string): Date {
   if (!dateStr) return new Date(NaN)
+  if (/^\d{4}-\d{2}-\d{2}T/.test(dateStr) || /^\d{4}-\d{2}-\d{2}\s/.test(dateStr)) {
+    const datePart = dateStr.slice(0, 10)
+    const [y, m, d] = datePart.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     const [y, m, d] = dateStr.split('-').map(Number)
     return new Date(y, m - 1, d)

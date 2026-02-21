@@ -17,6 +17,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const [valorAgregado, setValorAgregado] = useState('');
   const [data, setData] = useState(todayLocalDateInput());
   const [oc, setOc] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auto-fill placa when agregado is selected
   useEffect(() => {
@@ -30,6 +31,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!agregadoId || !valorFrete || !valorAgregado || !data || !oc) {
       alert("Preencha todos os campos obrigatórios.");
       return;
@@ -50,6 +52,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       createdAt: new Date().toISOString()
     };
 
+    setIsSubmitting(true);
     onSubmit(newFreight);
     onBack();
   };
@@ -143,7 +146,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               type="submit"
               onClick={() => {}}
               variant="primary" 
-              disabled={!agregadoId || !valorFrete || !valorAgregado || !oc}
+              disabled={isSubmitting || !agregadoId || !valorFrete || !valorAgregado || !oc}
             >
               CONFIRMAR LANÇAMENTO
             </BigButton>
