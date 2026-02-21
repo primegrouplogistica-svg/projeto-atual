@@ -304,6 +304,7 @@ export function mapAgregadoFreightFromDb(row: any) {
     valorAgregado: Number(row.valor_agregado),
     oc: row.oc,
     rota: row.rota ?? '',
+    conta: row.conta ?? undefined,
     data: row.data,
     createdAt: row.created_at
   };
@@ -318,6 +319,7 @@ export function mapAgregadoFreightToDb(f: any) {
     valor_agregado: f.valorAgregado,
     oc: f.oc,
     rota: f.rota ?? null,
+    conta: f.conta ?? null,
     data: f.data,
     created_at: f.createdAt
   };

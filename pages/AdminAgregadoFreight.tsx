@@ -18,6 +18,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const [data, setData] = useState(todayLocalDateInput());
   const [oc, setOc] = useState('');
   const [rota, setRota] = useState('');
+  const [conta, setConta] = useState<'geral' | 'antonio'>('geral');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auto-fill placa when agregado is selected
@@ -51,6 +52,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       data,
       oc,
       rota,
+      conta,
       createdAt: new Date().toISOString()
     };
 
@@ -114,6 +116,16 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               onChange={setRota}
               required
               placeholder="Ex: SP → RJ"
+            />
+            <Select
+              label="Conta"
+              value={conta}
+              onChange={(v) => setConta(v as 'geral' | 'antonio')}
+              options={[
+                { label: 'Geral', value: 'geral' },
+                { label: 'Antonio', value: 'antonio' }
+              ]}
+              required
             />
           </div>
 

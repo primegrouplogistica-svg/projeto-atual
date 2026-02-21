@@ -87,6 +87,11 @@ const App: React.FC = () => {
     if (!placa) return false;
     return placasAntonioSet.has(placa.toUpperCase());
   }, [placasAntonioSet]);
+  const isAntonioAgregadoFreight = useCallback((f: AgregadoFreight) => {
+    if (f?.conta === 'antonio') return true;
+    if (f?.conta === 'geral') return false;
+    return isAntonioPlaca(f.placa);
+  }, [isAntonioPlaca]);
 
   const routesGeral = useMemo(() => routes.filter(r => !isAntonioPlaca(r.placa)), [routes, isAntonioPlaca]);
   const routesAntonio = useMemo(() => routes.filter(r => isAntonioPlaca(r.placa)), [routes, isAntonioPlaca]);
@@ -98,8 +103,8 @@ const App: React.FC = () => {
   const maintenancesAntonio = useMemo(() => maintenances.filter(m => isAntonioPlaca(m.placa)), [maintenances, isAntonioPlaca]);
   const tollsGeral = useMemo(() => tolls.filter(t => !isAntonioPlaca(t.placa)), [tolls, isAntonioPlaca]);
   const tollsAntonio = useMemo(() => tolls.filter(t => isAntonioPlaca(t.placa)), [tolls, isAntonioPlaca]);
-  const agregadoFreightsGeral = useMemo(() => agregadoFreights.filter(a => !isAntonioPlaca(a.placa)), [agregadoFreights, isAntonioPlaca]);
-  const agregadoFreightsAntonio = useMemo(() => agregadoFreights.filter(a => isAntonioPlaca(a.placa)), [agregadoFreights, isAntonioPlaca]);
+  const agregadoFreightsGeral = useMemo(() => agregadoFreights.filter(a => !isAntonioAgregadoFreight(a)), [agregadoFreights, isAntonioAgregadoFreight]);
+  const agregadoFreightsAntonio = useMemo(() => agregadoFreights.filter(a => isAntonioAgregadoFreight(a)), [agregadoFreights, isAntonioAgregadoFreight]);
 
   const [dbOnline, setDbOnline] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);

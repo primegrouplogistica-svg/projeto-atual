@@ -91,6 +91,8 @@ export interface AgregadoFreight {
   valorAgregado: number;
   oc: string;
   rota?: string;
+  /** Conta de faturamento (separação Antonio) */
+  conta?: 'geral' | 'antonio';
   data: string;
   createdAt: string;
 }
