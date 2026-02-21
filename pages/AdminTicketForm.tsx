@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Ticket, User, UserRole, Vehicle } from '../types';
 import { Card, Input, Select, BigButton } from '../components/UI';
+import { todayLocalDateInput } from '../utils/date';
 
 interface AdminTicketFormProps {
   users: User[];
@@ -11,10 +12,12 @@ interface AdminTicketFormProps {
 
 const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, onSubmit, onBack }) => {
   const [numeroTicket, setNumeroTicket] = useState('');
+  const [notaFiscal, setNotaFiscal] = useState('');
   const [oc, setOc] = useState('');
   const [motivo, setMotivo] = useState('');
   const [placa, setPlaca] = useState('');
   const [motoristaId, setMotoristaId] = useState('');
+  const [data, setData] = useState(todayLocalDateInput());
 
   const motoristasOptions = useMemo(() => {
     return users
@@ -33,7 +36,7 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, onSu
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!numeroTicket || !oc || !motivo || !placa || !motoristaId) {
+    if (!numeroTicket || !oc || !motivo || !placa || !motoristaId || !data) {
       alert('Preencha todos os campos obrigatórios.');
       return;
     }
@@ -41,11 +44,13 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, onSu
     const newTicket: Ticket = {
       id: crypto.randomUUID(),
       numeroTicket: numeroTicket.trim(),
+      notaFiscal: notaFiscal.trim() || undefined,
       oc: oc.trim(),
       motivo: motivo.trim(),
       placa,
       motoristaId,
       motoristaNome: motoristaNome || undefined,
+      data,
       createdAt: new Date().toISOString()
     };
     onSubmit(newTicket);
@@ -67,11 +72,24 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, onSu
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
+              label="Data do Ticket"
+              type="date"
+              value={data}
+              onChange={setData}
+              required
+            />
+            <Input
               label="Número do Ticket"
               value={numeroTicket}
               onChange={setNumeroTicket}
               required
               placeholder="Ex: TCK-10293"
+            />
+            <Input
+              label="Nota Fiscal"
+              value={notaFiscal}
+              onChange={setNotaFiscal}
+              placeholder="Ex: NF-12345"
             />
             <Input
               label="OC (Ordem de Carga)"
@@ -107,7 +125,7 @@ const AdminTicketForm: React.FC<AdminTicketFormProps> = ({ users, vehicles, onSu
             />
           </div>
 
-          <BigButton type="submit" onClick={() => {}} disabled={!numeroTicket || !oc || !motivo || !placa || !motoristaId}>
+          <BigButton type="submit" onClick={() => {}} disabled={!numeroTicket || !oc || !motivo || !placa || !motoristaId || !data}>
             CONFIRMAR LANÇAMENTO
           </BigButton>
         </form>

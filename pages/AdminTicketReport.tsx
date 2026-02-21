@@ -15,7 +15,9 @@ const AdminTicketReport: React.FC<AdminTicketReportProps> = ({ tickets, users, v
   const [endDate, setEndDate] = useState('');
   const [placaFiltro, setPlacaFiltro] = useState('');
   const [motoristaFiltro, setMotoristaFiltro] = useState('');
+  const [ticketFiltro, setTicketFiltro] = useState('');
   const [busca, setBusca] = useState('');
+  const [copiado, setCopiado] = useState(false);
 
   const placasOptions = useMemo(() => {
     const placas = new Set<string>();
@@ -39,21 +41,41 @@ const AdminTicketReport: React.FC<AdminTicketReportProps> = ({ tickets, users, v
     const end = endDate ? parseDateLocal(endDate) : null;
     if (end) end.setHours(23, 59, 59, 999);
     const q = busca.trim().toLowerCase();
+    const ticketQ = ticketFiltro.trim().toLowerCase();
 
     return tickets.filter(t => {
-      const date = parseDateLocal(t.createdAt);
+      const date = parseDateLocal(t.data || t.createdAt);
       const matchesDate = (!start || date >= start) && (!end || date <= end);
       const matchesPlaca = !placaFiltro || t.placa === placaFiltro;
       const matchesMotorista = !motoristaFiltro || t.motoristaId === motoristaFiltro;
+      const matchesTicket = !ticketQ || t.numeroTicket.toLowerCase().includes(ticketQ);
       const matchesBusca = !q ||
         t.numeroTicket.toLowerCase().includes(q) ||
         t.oc.toLowerCase().includes(q) ||
         t.motivo.toLowerCase().includes(q) ||
         t.placa.toLowerCase().includes(q) ||
+        (t.notaFiscal?.toLowerCase().includes(q) ?? false) ||
         (t.motoristaNome?.toLowerCase().includes(q) ?? false);
-      return matchesDate && matchesPlaca && matchesMotorista && matchesBusca;
-    }).sort((a, b) => parseDateLocal(b.createdAt).getTime() - parseDateLocal(a.createdAt).getTime());
-  }, [tickets, startDate, endDate, placaFiltro, motoristaFiltro, busca]);
+      return matchesDate && matchesPlaca && matchesMotorista && matchesTicket && matchesBusca;
+    }).sort((a, b) => parseDateLocal(b.data || b.createdAt).getTime() - parseDateLocal(a.data || a.createdAt).getTime());
+  }, [tickets, startDate, endDate, placaFiltro, motoristaFiltro, ticketFiltro, busca]);
+
+  const copiarWhatsApp = async () => {
+    const periodo = startDate && endDate ? `${startDate} a ${endDate}` : 'Todo o período';
+    let text = `📋 *Relatório de Tickets*\nPeríodo: ${periodo}\n\n`;
+    filtered.forEach(t => {
+      const data = formatDateBr(t.data || t.createdAt);
+      const nf = t.notaFiscal ? `NF ${t.notaFiscal}` : 'NF —';
+      const motorista = t.motoristaNome || users.find(u => u.id === t.motoristaId)?.nome || '—';
+      text += `${data} | Ticket ${t.numeroTicket} | ${nf} | OC ${t.oc} | ${t.placa} | ${motorista}\n`;
+      text += `   ${t.motivo}\n`;
+    });
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch (_) {}
+  };
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
@@ -63,12 +85,22 @@ const AdminTicketReport: React.FC<AdminTicketReportProps> = ({ tickets, users, v
       </div>
 
       <Card className="no-print bg-slate-900/40 border-slate-800">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <Input label="Data Início" type="date" value={startDate} onChange={setStartDate} />
           <Input label="Data Fim" type="date" value={endDate} onChange={setEndDate} />
           <Select label="Placa" value={placaFiltro} onChange={setPlacaFiltro} options={[{ label: '— Todas —', value: '' }, ...placasOptions]} />
           <Select label="Motorista" value={motoristaFiltro} onChange={setMotoristaFiltro} options={[{ label: '— Todos —', value: '' }, ...motoristasOptions]} />
+          <Input label="Ticket" value={ticketFiltro} onChange={setTicketFiltro} placeholder="Ex: TCK-10293" />
           <Input label="Buscar" value={busca} onChange={setBusca} placeholder="Ticket, OC, motivo..." />
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={copiarWhatsApp}
+            className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest"
+          >
+            {copiado ? 'Copiado!' : 'Exportar WhatsApp'}
+          </button>
         </div>
       </Card>
 
@@ -83,6 +115,7 @@ const AdminTicketReport: React.FC<AdminTicketReportProps> = ({ tickets, users, v
                   <th className="p-3">Data</th>
                   <th className="p-3">Ticket</th>
                   <th className="p-3">OC</th>
+                  <th className="p-3">NF</th>
                   <th className="p-3">Placa</th>
                   <th className="p-3">Motorista</th>
                   <th className="p-3">Motivo</th>
@@ -91,9 +124,10 @@ const AdminTicketReport: React.FC<AdminTicketReportProps> = ({ tickets, users, v
               <tbody>
                 {filtered.map(t => (
                   <tr key={t.id} className="border-t border-slate-800 hover:bg-slate-800/50">
-                    <td className="p-3 font-mono text-slate-300">{formatDateBr(t.createdAt)}</td>
+                    <td className="p-3 font-mono text-slate-300">{formatDateBr(t.data || t.createdAt)}</td>
                     <td className="p-3 font-bold text-slate-200">{t.numeroTicket}</td>
                     <td className="p-3 text-slate-300">{t.oc}</td>
+                    <td className="p-3 text-slate-300">{t.notaFiscal || '—'}</td>
                     <td className="p-3 text-slate-300">{t.placa}</td>
                     <td className="p-3 text-slate-300">{t.motoristaNome || users.find(u => u.id === t.motoristaId)?.nome || '—'}</td>
                     <td className="p-3 text-slate-400">{t.motivo}</td>

@@ -350,11 +350,13 @@ export function mapTicketFromDb(row: any) {
   return {
     id: row.id,
     numeroTicket: row.numero_ticket,
+    notaFiscal: row.nota_fiscal ?? undefined,
     oc: row.oc,
     motivo: row.motivo,
     placa: row.placa,
     motoristaId: row.motorista_id,
     motoristaNome: row.motorista_nome ?? undefined,
+    data: row.data,
     createdAt: row.created_at
   };
 }
@@ -363,11 +365,13 @@ export function mapTicketToDb(t: any) {
   return {
     id: t.id,
     numero_ticket: t.numeroTicket,
+    nota_fiscal: t.notaFiscal ?? null,
     oc: t.oc,
     motivo: t.motivo,
     placa: t.placa,
     motorista_id: t.motoristaId,
     motorista_nome: t.motoristaNome ?? null,
+    data: t.data,
     created_at: t.createdAt
   };
 }
