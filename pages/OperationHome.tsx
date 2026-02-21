@@ -225,6 +225,7 @@ const OperationHome: React.FC<OperationHomeProps> = ({
               {/* CATEGORIA 3: RELATÓRIOS DE PERFORMANCE */}
               <SectionHeader title="Financeiro" />
               {hasPermission('admin-consolidated-finance') && <BigButton onClick={() => onNavigate('admin-consolidated-finance')} icon={<Wallet size={32} />} variant="success">Faturamento</BigButton>}
+              {hasPermission('admin-consolidated-finance-antonio') && <BigButton onClick={() => onNavigate('admin-consolidated-finance-antonio')} icon={<Wallet size={32} />} variant="secondary">Faturamento Antonio</BigButton>}
               {hasPermission('admin-payments-team') && <BigButton onClick={() => onNavigate('admin-payments-team')} icon={<Banknote size={32} />} variant="primary">Pagamentos Equipe</BigButton>}
               {hasPermission('admin-vehicle-report') && <BigButton onClick={() => onNavigate('admin-vehicle-report')} icon={<BarChart3 size={32} />} variant="secondary">Desempenho</BigButton>}
               {hasPermission('admin-agregado-report') && <BigButton onClick={() => onNavigate('admin-agregado-report')} icon={<LineChart size={32} />} variant="secondary">Agregados</BigButton>}

@@ -34,6 +34,7 @@ const PERMISSION_GROUPS = [
     title: 'Relatórios Financeiros',
     perms: [
       { id: 'admin-consolidated-finance', label: 'Faturamento e Lucro Geral' },
+      { id: 'admin-consolidated-finance-antonio', label: 'Faturamento Antonio (separado)' },
       { id: 'admin-payments-team', label: 'Pagamentos Motoristas e Ajudantes' },
       { id: 'admin-vehicle-report', label: 'Desempenho por Veículo' },
       { id: 'admin-agregado-report', label: 'Relatório de Agregados' },

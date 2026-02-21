@@ -108,6 +108,8 @@ export interface Vehicle {
   modelo: string;
   kmAtual: number;
   status: VehicleStatus;
+  /** Veículo pertence ao faturamento separado "Antonio" */
+  faturamentoAntonio?: boolean;
   preventiveTasks?: PreventiveTask[];
   proximaManutencaoKm?: number;
   ultimaRevisaoData?: string;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   User, UserSession, UserRole, Fueling, MaintenanceRequest,
   RouteDeparture, Vehicle, DailyRoute, Toll, Customer,
@@ -73,6 +73,33 @@ const App: React.FC = () => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_tolls') : null;
     return saved ? JSON.parse(saved) : [];
   });
+
+  const placasAntonioSet = useMemo(() => {
+    return new Set(
+      (vehicles || [])
+        .filter(v => v.faturamentoAntonio)
+        .map(v => (v.placa || '').toUpperCase())
+        .filter(Boolean)
+    );
+  }, [vehicles]);
+  const placasAntonio = useMemo(() => Array.from(placasAntonioSet.values()), [placasAntonioSet]);
+  const isAntonioPlaca = useCallback((placa?: string) => {
+    if (!placa) return false;
+    return placasAntonioSet.has(placa.toUpperCase());
+  }, [placasAntonioSet]);
+
+  const routesGeral = useMemo(() => routes.filter(r => !isAntonioPlaca(r.placa)), [routes, isAntonioPlaca]);
+  const routesAntonio = useMemo(() => routes.filter(r => isAntonioPlaca(r.placa)), [routes, isAntonioPlaca]);
+  const dailyRoutesGeral = useMemo(() => dailyRoutes.filter(r => !isAntonioPlaca(r.placa)), [dailyRoutes, isAntonioPlaca]);
+  const dailyRoutesAntonio = useMemo(() => dailyRoutes.filter(r => isAntonioPlaca(r.placa)), [dailyRoutes, isAntonioPlaca]);
+  const fuelingsGeral = useMemo(() => fuelings.filter(f => !isAntonioPlaca(f.placa)), [fuelings, isAntonioPlaca]);
+  const fuelingsAntonio = useMemo(() => fuelings.filter(f => isAntonioPlaca(f.placa)), [fuelings, isAntonioPlaca]);
+  const maintenancesGeral = useMemo(() => maintenances.filter(m => !isAntonioPlaca(m.placa)), [maintenances, isAntonioPlaca]);
+  const maintenancesAntonio = useMemo(() => maintenances.filter(m => isAntonioPlaca(m.placa)), [maintenances, isAntonioPlaca]);
+  const tollsGeral = useMemo(() => tolls.filter(t => !isAntonioPlaca(t.placa)), [tolls, isAntonioPlaca]);
+  const tollsAntonio = useMemo(() => tolls.filter(t => isAntonioPlaca(t.placa)), [tolls, isAntonioPlaca]);
+  const agregadoFreightsGeral = useMemo(() => agregadoFreights.filter(a => !isAntonioPlaca(a.placa)), [agregadoFreights, isAntonioPlaca]);
+  const agregadoFreightsAntonio = useMemo(() => agregadoFreights.filter(a => isAntonioPlaca(a.placa)), [agregadoFreights, isAntonioPlaca]);
 
   const [dbOnline, setDbOnline] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -443,7 +470,7 @@ const App: React.FC = () => {
       case 'my-routes':
         return <MyRoutes routes={dailyRoutes.filter(r => r.ajudanteId === currentUser.id)} onBack={() => navigate('operation')} />;
       case 'admin-dashboard':
-        return <AdminDashboard fuelings={fuelings} maintenances={maintenances} vehicles={vehicles} fixedExpenses={fixedExpenses} dailyRoutes={dailyRoutes} routes={routes} agregadoFreights={agregadoFreights} tolls={tolls} onBack={() => navigate('operation')} />;
+        return <AdminDashboard fuelings={fuelingsGeral} maintenances={maintenancesGeral} vehicles={vehicles} fixedExpenses={fixedExpenses} dailyRoutes={dailyRoutesGeral} routes={routesGeral} agregadoFreights={agregadoFreightsGeral} tolls={tollsGeral} onBack={() => navigate('operation')} />;
       case 'admin-pending':
         return <AdminPending fuelings={fuelings} maintenances={maintenances} dailyRoutes={dailyRoutes} routes={routes} vehicles={vehicles} users={users} currentUser={currentUser} onUpdateFueling={(id, up) => updateRecord(setFuelings, id, up)} onUpdateMaintenance={(id, up) => updateRecord(setMaintenances, id, up)} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} onDeleteFueling={async (id) => { if (supabase) await deleteFuelingFromSupabase(supabase, id); deleteRecord(setFuelings, id); }} onDeleteMaintenance={async (id) => { if (supabase) await deleteMaintenanceFromSupabase(supabase, id); deleteRecord(setMaintenances, id); }} onDeleteDailyRoute={async (id) => { if (supabase) await deleteDailyRouteFromSupabase(supabase, id); deleteRecord(setDailyRoutes, id); }} onDeleteRoute={async (id) => { if (supabase) await deleteRouteFromSupabase(supabase, id); deleteRecord(setRoutes, id); }} onBack={() => navigate('operation')} />;
       case 'user-mgmt':
@@ -483,7 +510,7 @@ const App: React.FC = () => {
       case 'admin-payments-team':
         return <AdminTeamReport dailyRoutes={dailyRoutes} routes={routes} users={users} onBack={() => navigate('operation')} />;
       case 'admin-consolidated-finance':
-        return <AdminConsolidatedFinancialReport dailyRoutes={dailyRoutes} routes={routes} fuelings={fuelings} maintenances={maintenances} tolls={tolls} agregadoFreights={agregadoFreights} fixedExpenses={fixedExpenses} users={users} onBack={() => navigate('operation')} onDeleteMovement={async (m) => {
+        return <AdminConsolidatedFinancialReport dailyRoutes={dailyRoutesGeral} routes={routesGeral} fuelings={fuelingsGeral} maintenances={maintenancesGeral} tolls={tollsGeral} agregadoFreights={agregadoFreightsGeral} fixedExpenses={fixedExpenses} users={users} onBack={() => navigate('operation')} onDeleteMovement={async (m) => {
           const id = m.id;
           if (id.startsWith('route-motorista-') || id.startsWith('route-ajudante-')) { const routeId = id.replace('route-motorista-', '').replace('route-ajudante-', ''); updateRecord(setRoutes, routeId, { valorMotorista: 0, valorAjudante: 0 }); }
           else if (id.startsWith('route-')) { const rid = id.replace('route-', ''); if (supabase) await deleteRouteFromSupabase(supabase, rid); deleteRecord(setRoutes, rid); }
@@ -496,6 +523,20 @@ const App: React.FC = () => {
           else if (id.startsWith('toll-')) { const tid = id.replace('toll-', ''); if (supabase) await deleteTollFromSupabase(supabase, tid); deleteRecord(setTolls, tid); }
           else if (id.startsWith('fix-')) { const fid = id.replace('fix-', ''); if (supabase) await deleteFixedExpenseFromSupabase(supabase, fid); deleteRecord(setFixedExpenses, fid); }
         }} />;
+      case 'admin-consolidated-finance-antonio':
+        return <AdminConsolidatedFinancialReport
+          dailyRoutes={dailyRoutesAntonio}
+          routes={routesAntonio}
+          fuelings={fuelingsAntonio}
+          maintenances={maintenancesAntonio}
+          tolls={tollsAntonio}
+          agregadoFreights={agregadoFreightsAntonio}
+          fixedExpenses={[]}
+          users={users}
+          title="Faturamento Antonio"
+          placasInfo={placasAntonio}
+          onBack={() => navigate('operation')}
+        />;
       case 'admin-vehicle-report':
         return <AdminVehicleReport fuelings={fuelings} maintenances={maintenances} vehicles={vehicles} dailyRoutes={dailyRoutes} routes={routes} tolls={tolls} fixedExpenses={fixedExpenses} onBack={() => navigate('operation')} onUpdateDailyRoute={(id, up) => updateRecord(setDailyRoutes, id, up)} onUpdateRoute={(id, up) => updateRecord(setRoutes, id, up)} />;
       case 'admin-activity-report':

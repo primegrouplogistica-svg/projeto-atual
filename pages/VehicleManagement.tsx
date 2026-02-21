@@ -16,11 +16,13 @@ const VehicleManagement: React.FC<VehicleMgmtProps> = ({ vehicles, onSaveVehicle
   const [placa, setPlaca] = useState('');
   const [modelo, setModelo] = useState('');
   const [km, setKm] = useState('');
+  const [novoAntonio, setNovoAntonio] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPlaca, setEditPlaca] = useState('');
   const [editModelo, setEditModelo] = useState('');
   const [editStatus, setEditStatus] = useState<VehicleStatus>(VehicleStatus.RODANDO);
+  const [editAntonio, setEditAntonio] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,12 +34,13 @@ const VehicleManagement: React.FC<VehicleMgmtProps> = ({ vehicles, onSaveVehicle
       modelo,
       kmAtual: Number(km) || 0,
       status: VehicleStatus.RODANDO,
+      faturamentoAntonio: novoAntonio,
       proximaManutencaoKm: (Number(km) || 0) + 10000
     };
     await onSaveVehicle(newVehicle);
     setIsSaving(false);
     setShowForm(false);
-    setPlaca(''); setModelo(''); setKm('');
+    setPlaca(''); setModelo(''); setKm(''); setNovoAntonio(false);
   };
 
   const startEdit = (v: Vehicle) => {
@@ -45,13 +48,14 @@ const VehicleManagement: React.FC<VehicleMgmtProps> = ({ vehicles, onSaveVehicle
     setEditPlaca(v.placa);
     setEditModelo(v.modelo);
     setEditStatus(v.status);
+    setEditAntonio(!!v.faturamentoAntonio);
   };
 
   const saveEdit = (id: string) => {
     const placaTrim = editPlaca.trim().toUpperCase();
     const modeloTrim = editModelo.trim();
     if (!placaTrim || !modeloTrim) return alert('Placa e Modelo são obrigatórios');
-    onUpdateVehicle(id, { placa: placaTrim, modelo: modeloTrim, status: editStatus });
+    onUpdateVehicle(id, { placa: placaTrim, modelo: modeloTrim, status: editStatus, faturamentoAntonio: editAntonio });
     setEditingId(null);
   };
 
@@ -59,6 +63,7 @@ const VehicleManagement: React.FC<VehicleMgmtProps> = ({ vehicles, onSaveVehicle
     setEditingId(null);
     setEditPlaca('');
     setEditModelo('');
+    setEditAntonio(false);
   };
 
   const statusOptions: { value: VehicleStatus; label: string }[] = [
@@ -86,6 +91,18 @@ const VehicleManagement: React.FC<VehicleMgmtProps> = ({ vehicles, onSaveVehicle
             <Input label="Placa" value={placa} onChange={setPlaca} required placeholder="ABC-1234" />
             <Input label="Modelo" value={modelo} onChange={setModelo} required />
             <Input label="KM Inicial" type="number" value={km} onChange={setKm} />
+            <div className="md:col-span-3 flex items-center gap-2">
+              <input
+                id="novo-antonio"
+                type="checkbox"
+                checked={novoAntonio}
+                onChange={(e) => setNovoAntonio(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500"
+              />
+              <label htmlFor="novo-antonio" className="text-xs font-bold text-slate-400 uppercase">
+                Faturamento Antonio
+              </label>
+            </div>
             <div className="md:col-span-3">
               <button type="submit" disabled={isSaving} className="w-full p-6 rounded-2xl border-b-4 border-emerald-600 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white font-black uppercase tracking-widest transition-all">
                 CADASTRAR
@@ -133,6 +150,18 @@ const VehicleManagement: React.FC<VehicleMgmtProps> = ({ vehicles, onSaveVehicle
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
+                  <input
+                    id={`antonio-${v.id}`}
+                    type="checkbox"
+                    checked={editAntonio}
+                    onChange={(e) => setEditAntonio(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500"
+                  />
+                  <label htmlFor={`antonio-${v.id}`} className="text-xs font-bold text-slate-400 uppercase">
+                    Faturamento Antonio
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
                   <button onClick={() => saveEdit(v.id)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold uppercase">
                     <Check size={14} /> Salvar
                   </button>
@@ -147,6 +176,9 @@ const VehicleManagement: React.FC<VehicleMgmtProps> = ({ vehicles, onSaveVehicle
                   <div className="font-mono font-black text-xl text-blue-400">{v.placa}</div>
                   <div className="text-sm font-bold text-slate-100">{v.modelo}</div>
                   <div className="text-[10px] text-slate-500 uppercase">KM: {v.kmAtual.toLocaleString()}</div>
+                  {v.faturamentoAntonio && (
+                    <div className="text-[10px] text-amber-400 font-black uppercase mt-1">Antonio</div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge status={v.status}>{getStatusLabel(v.status)}</Badge>

@@ -35,10 +35,12 @@ interface AdminConsolidatedFinancialReportProps {
   users: User[];
   onBack: () => void;
   onDeleteMovement?: (movimento: Movimento) => void;
+  title?: string;
+  placasInfo?: string[];
 }
 
 const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialReportProps> = ({
-  dailyRoutes, routes, fuelings, maintenances, tolls, agregadoFreights, fixedExpenses, users, onBack, onDeleteMovement
+  dailyRoutes, routes, fuelings, maintenances, tolls, agregadoFreights, fixedExpenses, users, onBack, onDeleteMovement, title, placasInfo
 }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -434,9 +436,26 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
       <div className="flex items-center justify-between no-print">
-        <h2 className="text-3xl font-black uppercase text-white">Consolidado Financeiro</h2>
+        <h2 className="text-3xl font-black uppercase text-white">{title || 'Consolidado Financeiro'}</h2>
         <button onClick={onBack} className="bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-700 text-xs uppercase text-white">Voltar</button>
       </div>
+
+      {placasInfo && (
+        <Card className="no-print bg-amber-950/30 border-amber-900/40">
+          <div className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-2">Placas da Conta Antonio</div>
+          {placasInfo.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {placasInfo.map((p) => (
+                <span key={p} className="px-3 py-1 rounded-lg bg-amber-900/40 text-amber-200 text-xs font-mono font-bold">
+                  {p}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-amber-200/80">Nenhuma placa vinculada ainda.</div>
+          )}
+        </Card>
+      )}
 
       <Card className="no-print bg-slate-900/40 border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
