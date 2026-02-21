@@ -1,19 +1,21 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { AgregadoFreight, Agregado, User, UserRole } from '../types';
+import { AgregadoFreight, Agregado, User, UserRole, Customer } from '../types';
 import { Card, Input, BigButton, Select } from '../components/UI';
 import { todayLocalDateInput } from '../utils/date';
 
 interface AdminAgregadoFreightProps {
   agregados: Agregado[];
+  customers?: Customer[];
   users?: User[];
   onSubmit: (freight: AgregadoFreight) => void;
   onBack: () => void;
 }
 
-const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, users = [], onSubmit, onBack }) => {
+const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, customers = [], users = [], onSubmit, onBack }) => {
   const [agregadoId, setAgregadoId] = useState('');
   const [placa, setPlaca] = useState('');
+  const [clienteId, setClienteId] = useState('');
   const [valorFrete, setValorFrete] = useState('');
   const [valorAgregado, setValorAgregado] = useState('');
   const [valorMotorista, setValorMotorista] = useState('');
@@ -29,6 +31,10 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const selectedAgregado = useMemo(
     () => agregados.find(a => a.id === agregadoId),
     [agregadoId, agregados]
+  );
+  const selectedCustomer = useMemo(
+    () => customers.find(c => c.id === clienteId),
+    [clienteId, customers]
   );
   const isAntonio = useMemo(
     () => !!selectedAgregado?.isAntonio,
@@ -75,7 +81,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    if (!agregadoId || !valorFrete || !valorAgregado || !data || !oc || !rota) {
+    if (!agregadoId || !clienteId || !valorFrete || !valorAgregado || !data || !oc || !rota) {
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
@@ -93,6 +99,8 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
       agregadoId: agregadoId,
       nomeAgregado: selectedAgregado.nome,
       placa: selectedAgregado.placa,
+      clienteId,
+      clienteNome: selectedCustomer?.nome,
       valorFrete: Number(valorFrete),
       valorAgregado: Number(valorAgregado),
       data,
@@ -116,6 +124,9 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const activeAgregadosOptions = agregados
     .filter(a => a.ativo)
     .map(a => ({ label: `${a.nome} (${a.placa})`, value: a.id }));
+  const clientesOptions = customers
+    .filter(c => c.ativo)
+    .map(c => ({ label: c.nome, value: c.id }));
 
   return (
     <div className="max-w-3xl mx-auto py-4 animate-fadeIn">
@@ -154,6 +165,13 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               value={data} 
               onChange={setData} 
               required 
+            />
+            <Select
+              label="Cliente"
+              value={clienteId}
+              onChange={setClienteId}
+              options={clientesOptions}
+              required
             />
             <Input 
               label="OC (Ordem de Carga)" 
@@ -253,7 +271,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
               type="submit"
               onClick={() => {}}
               variant="primary" 
-              disabled={isSubmitting || !agregadoId || !valorFrete || !valorAgregado || !oc || !rota || (isAntonio && (!valorMotorista || !valorAjudante || !motoristaId || !ajudanteId))}
+              disabled={isSubmitting || !agregadoId || !clienteId || !valorFrete || !valorAgregado || !oc || !rota || (isAntonio && (!valorMotorista || !valorAjudante || !motoristaId || !ajudanteId))}
             >
               CONFIRMAR LANÇAMENTO
             </BigButton>

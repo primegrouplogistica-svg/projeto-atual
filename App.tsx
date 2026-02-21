@@ -504,7 +504,7 @@ const App: React.FC = () => {
       case 'admin-agregado-mgmt':
         return <AdminAgregadoManagement agregados={agregados} onUpdateAgregados={setAgregados} onDeleteAgregado={async (id) => { if (supabase) await deleteAgregadoFromSupabase(supabase, id); setAgregados(prev => prev.filter(a => a.id !== id)); }} onBack={() => navigate('operation')} />;
       case 'admin-agregado-freight':
-        return <AdminAgregadoFreight agregados={agregados} users={users} antonioEquipe={antonioEquipe} onSubmit={(f) => saveRecord(setAgregadoFreights, f)} onBack={() => navigate('operation')} />;
+        return <AdminAgregadoFreight agregados={agregados} customers={customers} users={users} antonioEquipe={antonioEquipe} onSubmit={(f) => saveRecord(setAgregadoFreights, f)} onBack={() => navigate('operation')} />;
       case 'admin-agregado-report':
         return <AdminAgregadoReport freights={agregadoFreights} onBack={() => navigate('operation')} />;
       case 'admin-tolls':

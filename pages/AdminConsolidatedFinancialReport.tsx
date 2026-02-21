@@ -101,7 +101,19 @@ const AdminConsolidatedFinancialReport: React.FC<AdminConsolidatedFinancialRepor
       .filter(r => filterDate(r.data))
       .forEach(r => {
         const v = modo === 'antonio' ? safeNum(r.valorAgregado) : safeNum(r.valorFrete);
-        if (v > 0) list.push({ id: `agr-${r.id}`, data: r.data, tipo: 'entrada', categoria: 'Frete agregado', descricao: `${r.nomeAgregado} — OC ${r.oc} — ${r.placa}`, valor: v, placa: r.placa, empresa: r.nomeAgregado || 'Agregado' });
+        if (v > 0) {
+          const clienteLabel = r.clienteNome || 'Sem cliente';
+          list.push({
+            id: `agr-${r.id}`,
+            data: r.data,
+            tipo: 'entrada',
+            categoria: 'Frete agregado',
+            descricao: `${r.nomeAgregado} — ${clienteLabel} — OC ${r.oc} — ${r.placa}`,
+            valor: v,
+            placa: r.placa,
+            empresa: r.clienteNome || r.nomeAgregado || 'Agregado'
+          });
+        }
       });
 
     // ——— SAÍDAS ———

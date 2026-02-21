@@ -91,6 +91,8 @@ export interface AgregadoFreight {
   agregadoId: string;
   nomeAgregado: string;
   placa: string;
+  clienteId?: string;
+  clienteNome?: string;
   valorFrete: number;
   valorAgregado: number;
   oc: string;
