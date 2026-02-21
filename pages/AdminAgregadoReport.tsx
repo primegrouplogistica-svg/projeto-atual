@@ -108,8 +108,9 @@ const AdminAgregadoReport: React.FC<AdminAgregadoReportProps> = ({ freights, onB
       const data = formatDateBr(f.data);
       const oc = f.oc || '—';
       const rota = f.rota || '—';
+      const cliente = f.clienteNome || '—';
       const valor = Number(f.valorAgregado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-      msg += `• ${data} | OC ${oc} | Rota ${rota} → R$ ${valor}\n`;
+      msg += `• ${data} | Cliente ${cliente} | OC ${oc} | Rota ${rota} → R$ ${valor}\n`;
     });
     msg += `\n*Total a pagar:* R$ ${item.totalAPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n\n_Prime Group_`;
     navigator.clipboard.writeText(msg).then(() => {
