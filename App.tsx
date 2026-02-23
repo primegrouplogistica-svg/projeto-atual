@@ -70,7 +70,19 @@ const App: React.FC = () => {
 
   const [agregadoFreights, setAgregadoFreights] = useState<AgregadoFreight[]>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_agregado_freights') : null;
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const list: AgregadoFreight[] = JSON.parse(saved) || [];
+      const seen = new Set<string>();
+      return list.filter((item) => {
+        if (!item?.id) return false;
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+    } catch {
+      return [];
+    }
   });
 
   const [tolls, setTolls] = useState<Toll[]>(() => {
@@ -340,6 +352,21 @@ const App: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    const uniqById = (list: AgregadoFreight[]) => {
+      const seen = new Set<string>();
+      return list.filter((item) => {
+        if (!item?.id) return false;
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+    };
+    const uniqAgregadoFreights = uniqById(agregadoFreights);
+    if (uniqAgregadoFreights.length !== agregadoFreights.length) {
+      setAgregadoFreights(uniqAgregadoFreights);
+      return;
+    }
+
     localStorage.setItem('pg_users', JSON.stringify(users));
     localStorage.setItem('pg_vehicles', JSON.stringify(vehicles));
     localStorage.setItem('pg_customers', JSON.stringify(customers));
@@ -349,7 +376,7 @@ const App: React.FC = () => {
     localStorage.setItem('pg_daily_routes', JSON.stringify(dailyRoutes));
     localStorage.setItem('pg_fixed_expenses', JSON.stringify(fixedExpenses));
     localStorage.setItem('pg_agregados', JSON.stringify(agregados));
-    localStorage.setItem('pg_agregado_freights', JSON.stringify(agregadoFreights));
+    localStorage.setItem('pg_agregado_freights', JSON.stringify(uniqAgregadoFreights));
     localStorage.setItem('pg_tolls', JSON.stringify(tolls));
     localStorage.setItem('pg_antonio_equipe', JSON.stringify(antonioEquipe));
     localStorage.setItem('pg_tickets', JSON.stringify(tickets));
@@ -357,7 +384,9 @@ const App: React.FC = () => {
     if (supabase && dbOnline) {
       syncAllToSupabase(supabase, {
         users, vehicles, customers, fuelings, maintenances,
-        routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls, tickets
+        routes, dailyRoutes, fixedExpenses, agregados,
+        agregadoFreights: uniqAgregadoFreights,
+        tolls, tickets
       });
     }
   }, [users, vehicles, customers, fuelings, maintenances, routes, dailyRoutes, fixedExpenses, agregados, agregadoFreights, tolls, tickets, antonioEquipe, dbOnline]);
@@ -556,7 +585,17 @@ const App: React.FC = () => {
           else if (id.startsWith('daily-motorista-') || id.startsWith('daily-ajudante-')) { const dailyId = id.replace('daily-motorista-', '').replace('daily-ajudante-', ''); updateRecord(setDailyRoutes, dailyId, { valorMotorista: 0, valorAjudante: 0 }); }
           else if (id.startsWith('daily-')) { const did = id.replace('daily-', ''); if (supabase) await deleteDailyRouteFromSupabase(supabase, did); deleteRecord(setDailyRoutes, did); }
           else if (id.startsWith('agr-p-')) updateRecord(setAgregadoFreights, id.replace('agr-p-', ''), { valorAgregado: 0 });
-          else if (id.startsWith('agr-')) { const aid = id.replace('agr-', ''); if (supabase) await deleteAgregadoFreightFromSupabase(supabase, aid); deleteRecord(setAgregadoFreights, aid); }
+          else if (id.startsWith('agr-')) {
+            const aid = id.replace('agr-', '');
+            if (supabase) {
+              const ok = await deleteAgregadoFreightFromSupabase(supabase, aid);
+              if (!ok) {
+                alert('Falha ao excluir no servidor. Tente novamente.');
+                return;
+              }
+            }
+            deleteRecord(setAgregadoFreights, aid);
+          }
           else if (id.startsWith('fuel-')) { const fid = id.replace('fuel-', ''); if (supabase) await deleteFuelingFromSupabase(supabase, fid); deleteRecord(setFuelings, fid); }
           else if (id.startsWith('maint-')) { const mid = id.replace('maint-', ''); if (supabase) await deleteMaintenanceFromSupabase(supabase, mid); deleteRecord(setMaintenances, mid); }
           else if (id.startsWith('toll-')) { const tid = id.replace('toll-', ''); if (supabase) await deleteTollFromSupabase(supabase, tid); deleteRecord(setTolls, tid); }

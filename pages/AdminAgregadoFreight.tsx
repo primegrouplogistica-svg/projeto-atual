@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { AgregadoFreight, Agregado, User, UserRole, Customer } from '../types';
 import { Card, Input, BigButton, Select } from '../components/UI';
 import { todayLocalDateInput } from '../utils/date';
@@ -27,6 +26,7 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
   const [motoristaId, setMotoristaId] = useState('');
   const [ajudanteId, setAjudanteId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const selectedAgregado = useMemo(
     () => agregados.find(a => a.id === agregadoId),
@@ -80,17 +80,23 @@ const AdminAgregadoFreight: React.FC<AdminAgregadoFreightProps> = ({ agregados, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (submittingRef.current || isSubmitting) return;
+    submittingRef.current = true;
     if (!agregadoId || !clienteId || !valorFrete || !valorAgregado || !data || !oc || !rota) {
+      submittingRef.current = false;
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
     if (isAntonio && (!valorMotorista || !valorAjudante || !motoristaId || !ajudanteId)) {
+      submittingRef.current = false;
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
 
-    if (!selectedAgregado) return;
+    if (!selectedAgregado) {
+      submittingRef.current = false;
+      return;
+    }
     const motoristaNome = users.find(u => u.id === motoristaId)?.nome ?? '';
     const ajudanteNome = users.find(u => u.id === ajudanteId)?.nome ?? '';
 

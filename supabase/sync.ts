@@ -196,9 +196,13 @@ export async function deleteFixedExpenseFromSupabase(supabase: SupabaseClient, i
   if (error) console.error('deleteFixedExpenseFromSupabase:', error);
 }
 
-export async function deleteAgregadoFreightFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
+export async function deleteAgregadoFreightFromSupabase(supabase: SupabaseClient, id: string): Promise<boolean> {
   const { error } = await supabase.from('agregado_freights').delete().eq('id', id);
-  if (error) console.error('deleteAgregadoFreightFromSupabase:', error);
+  if (error) {
+    console.error('deleteAgregadoFreightFromSupabase:', error);
+    return false;
+  }
+  return true;
 }
 
 export async function deleteTicketFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
