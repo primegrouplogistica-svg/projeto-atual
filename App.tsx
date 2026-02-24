@@ -265,24 +265,9 @@ const App: React.FC = () => {
       });
       return Array.from(byId.values());
     };
-    const mergeAgregadoFreights = (prev: AgregadoFreight[], incoming: AgregadoFreight[]) => {
-      const byId = new Map<string, AgregadoFreight>();
-      uniqById(incoming).forEach((item) => {
-        if (item?.id) byId.set(item.id, item);
-      });
-      prev.forEach((item) => {
-        if (!item?.id) return;
-        const existing = byId.get(item.id);
-        if (!existing) {
-          byId.set(item.id, item);
-          return;
-        }
-        byId.set(item.id, {
-          ...existing,
-          rota: existing.rota?.trim() ? existing.rota : item.rota
-        });
-      });
-      return Array.from(byId.values());
+    const mergeAgregadoFreights = (_prev: AgregadoFreight[], incoming: AgregadoFreight[]) => {
+      // Usar o Supabase como fonte de verdade para evitar que lançamentos excluídos voltem
+      return uniqById(incoming);
     };
     const mergeUsers = (prev: User[], incoming: User[]) => {
       const byId = new Map<string, User>();
