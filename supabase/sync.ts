@@ -110,15 +110,8 @@ export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<All
 
 export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData): Promise<void> {
   try {
-    // Para agregado_freights: remover do Supabase os que não estão no estado local
-    // (evita que lançamentos excluídos voltem por race condition no sync)
-    const idsToKeep = new Set(data.agregadoFreights.map((f: any) => f.id).filter(Boolean));
-    const { data: existingRows } = await supabase.from('agregado_freights').select('id');
-    const idsToRemove = (existingRows ?? []).map((r: any) => r.id).filter((id: string) => !idsToKeep.has(id));
-    if (idsToRemove.length > 0) {
-      await Promise.all(idsToRemove.map((id: string) => supabase.from('agregado_freights').delete().eq('id', id)));
-    }
-
+    // NÃO sincronizar agregado_freights no sync automático - evita que excluídos voltem.
+    // Add = insertAgregadoFreightToSupabase no submit. Delete = deleteAgregadoFreightFromSupabase.
     const results = await Promise.all([
       data.users.length ? supabase.from('users').upsert(data.users.map(mapUserToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.vehicles.length ? supabase.from('vehicles').upsert(data.vehicles.map(mapVehicleToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
@@ -129,7 +122,6 @@ export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData)
       data.routes.length ? supabase.from('route_departures').upsert(data.routes.map(mapRouteDepartureToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.fixedExpenses.length ? supabase.from('fixed_expenses').upsert(data.fixedExpenses.map(mapFixedExpenseToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.agregados.length ? supabase.from('agregados').upsert(data.agregados.map(mapAgregadoToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
-      data.agregadoFreights.length ? supabase.from('agregado_freights').upsert(data.agregadoFreights.map(mapAgregadoFreightToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.tolls.length ? supabase.from('tolls').upsert(data.tolls.map(mapTollToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.tickets.length ? supabase.from('tickets').upsert(data.tickets.map(mapTicketToDb), { onConflict: 'id' }) : Promise.resolve({ error: null })
     ]);
@@ -143,7 +135,6 @@ export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData)
       'route_departures',
       'fixed_expenses',
       'agregados',
-      'agregado_freights',
       'tolls',
       'tickets'
     ];
@@ -203,6 +194,25 @@ export async function deleteTollFromSupabase(supabase: SupabaseClient, id: strin
 export async function deleteFixedExpenseFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
   const { error } = await supabase.from('fixed_expenses').delete().eq('id', id);
   if (error) console.error('deleteFixedExpenseFromSupabase:', error);
+}
+
+export async function insertAgregadoFreightToSupabase(supabase: SupabaseClient, f: any): Promise<boolean> {
+  const { error } = await supabase.from('agregado_freights').insert(mapAgregadoFreightToDb(f));
+  if (error) {
+    console.error('insertAgregadoFreightToSupabase:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function updateAgregadoFreightInSupabase(supabase: SupabaseClient, id: string, update: Partial<Record<string, any>>): Promise<void> {
+  const toDb: Record<string, any> = {};
+  if (update.valorAgregado !== undefined) toDb.valor_agregado = update.valorAgregado;
+  if (update.valorMotorista !== undefined) toDb.valor_motorista = update.valorMotorista;
+  if (update.valorAjudante !== undefined) toDb.valor_ajudante = update.valorAjudante;
+  if (Object.keys(toDb).length === 0) return;
+  const { error } = await supabase.from('agregado_freights').update(toDb).eq('id', id);
+  if (error) console.error('updateAgregadoFreightInSupabase:', error);
 }
 
 export async function deleteAgregadoFreightFromSupabase(supabase: SupabaseClient, id: string): Promise<boolean> {

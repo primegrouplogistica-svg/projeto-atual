@@ -10,7 +10,7 @@ import { Logo } from './components/UI';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DriverLocationSender } from './components/DriverLocationSender';
 import { supabase, isSupabaseOnline } from './supabase';
-import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase, deleteFuelingFromSupabase, deleteMaintenanceFromSupabase, deleteDailyRouteFromSupabase, deleteRouteFromSupabase, deleteTollFromSupabase, deleteFixedExpenseFromSupabase, deleteAgregadoFreightFromSupabase, deleteTicketFromSupabase } from './supabase/sync';
+import { loadAllFromSupabase, syncAllToSupabase, deleteUserFromSupabase, deleteAgregadoFromSupabase, deleteCustomerFromSupabase, deleteFuelingFromSupabase, deleteMaintenanceFromSupabase, deleteDailyRouteFromSupabase, deleteRouteFromSupabase, deleteTollFromSupabase, deleteFixedExpenseFromSupabase, insertAgregadoFreightToSupabase, updateAgregadoFreightInSupabase, deleteAgregadoFreightFromSupabase, deleteTicketFromSupabase } from './supabase/sync';
 import { RefreshCw } from 'lucide-react';
 import AdminFuelingForm from './pages/AdminFuelingForm';
 
@@ -529,7 +529,7 @@ const App: React.FC = () => {
       case 'admin-agregado-mgmt':
         return <AdminAgregadoManagement agregados={agregados} onUpdateAgregados={setAgregados} onDeleteAgregado={async (id) => { if (supabase) await deleteAgregadoFromSupabase(supabase, id); setAgregados(prev => prev.filter(a => a.id !== id)); }} onBack={() => navigate('operation')} />;
       case 'admin-agregado-freight':
-        return <AdminAgregadoFreight agregados={agregados} customers={customers} users={users} antonioEquipe={antonioEquipe} onSubmit={(f) => saveRecord(setAgregadoFreights, f)} onBack={() => navigate('operation')} />;
+        return <AdminAgregadoFreight agregados={agregados} customers={customers} users={users} antonioEquipe={antonioEquipe} onSubmit={async (f) => { if (supabase) await insertAgregadoFreightToSupabase(supabase, f); saveRecord(setAgregadoFreights, f); }} onBack={() => navigate('operation')} />;
       case 'admin-agregado-report':
         return <AdminAgregadoReport freights={agregadoFreights} onBack={() => navigate('operation')} />;
       case 'agregado-ticket-create':
@@ -569,7 +569,7 @@ const App: React.FC = () => {
           else if (id.startsWith('route-')) { const rid = id.replace('route-', ''); if (supabase) await deleteRouteFromSupabase(supabase, rid); deleteRecord(setRoutes, rid); }
           else if (id.startsWith('daily-motorista-') || id.startsWith('daily-ajudante-')) { const dailyId = id.replace('daily-motorista-', '').replace('daily-ajudante-', ''); updateRecord(setDailyRoutes, dailyId, { valorMotorista: 0, valorAjudante: 0 }); }
           else if (id.startsWith('daily-')) { const did = id.replace('daily-', ''); if (supabase) await deleteDailyRouteFromSupabase(supabase, did); deleteRecord(setDailyRoutes, did); }
-          else if (id.startsWith('agr-p-')) updateRecord(setAgregadoFreights, id.replace('agr-p-', ''), { valorAgregado: 0 });
+          else if (id.startsWith('agr-p-')) { const aid = id.replace('agr-p-', ''); if (supabase) await updateAgregadoFreightInSupabase(supabase, aid, { valorAgregado: 0 }); updateRecord(setAgregadoFreights, aid, { valorAgregado: 0 }); }
           else if (id.startsWith('agr-')) {
             const aid = id.replace('agr-', '');
             if (supabase) {
