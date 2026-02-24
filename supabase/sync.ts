@@ -220,7 +220,7 @@ export async function deleteAgregadoFreightFromSupabase(supabase: SupabaseClient
     const { error } = await supabase.from('agregado_freights').delete().eq('id', id);
     if (!error) return true;
     console.error('deleteAgregadoFreightFromSupabase (tentativa ' + attempt + '):', error);
-    if (attempt < 2) await new Promise(r => setTimeout(r, 800)); // retry após 800ms
+    if (attempt < 2) await new Promise(r => setTimeout(r, 800));
   }
   return false;
 }

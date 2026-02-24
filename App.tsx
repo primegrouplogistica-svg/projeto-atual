@@ -68,22 +68,7 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [agregadoFreights, setAgregadoFreights] = useState<AgregadoFreight[]>(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_agregado_freights') : null;
-    if (!saved) return [];
-    try {
-      const list: AgregadoFreight[] = JSON.parse(saved) || [];
-      const seen = new Set<string>();
-      return list.filter((item) => {
-        if (!item?.id) return false;
-        if (seen.has(item.id)) return false;
-        seen.add(item.id);
-        return true;
-      });
-    } catch {
-      return [];
-    }
-  });
+  const [agregadoFreights, setAgregadoFreights] = useState<AgregadoFreight[]>([]);
 
   const [tolls, setTolls] = useState<Toll[]>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('pg_tolls') : null;
@@ -265,10 +250,6 @@ const App: React.FC = () => {
       });
       return Array.from(byId.values());
     };
-    const mergeAgregadoFreights = (_prev: AgregadoFreight[], incoming: AgregadoFreight[]) => {
-      // Usar o Supabase como fonte de verdade para evitar que lançamentos excluídos voltem
-      return uniqById(incoming);
-    };
     const mergeUsers = (prev: User[], incoming: User[]) => {
       const byId = new Map<string, User>();
       uniqById(incoming).forEach((item) => {
@@ -301,23 +282,23 @@ const App: React.FC = () => {
       setDailyRoutes(data.dailyRoutes);
       setFixedExpenses(data.fixedExpenses);
       setAgregados((prev) => mergeById(prev, data.agregados));
-      setAgregadoFreights((prev) => mergeAgregadoFreights(prev, data.agregadoFreights));
       setTolls(data.tolls);
       setTickets(data.tickets);
     }
+    setAgregadoFreights(uniqById(data.agregadoFreights));
     setDbOnline(true);
   }, []);
 
   useEffect(() => {
     if (!supabase) return;
-    loadAllFromSupabase(supabase)
-      .then((data) => {
-        applyLoadedData(data);
-      })
-      .catch((err) => {
-        console.error('[Prime] Erro ao conectar no Supabase:', err?.message || err);
-        setDbOnline(false);
-      });
+    const load = () => loadAllFromSupabase(supabase).then(applyLoadedData).catch((err) => {
+      console.error('[Prime] Erro ao conectar no Supabase:', err?.message || err);
+      setDbOnline(false);
+    });
+    load();
+    const onFocus = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onFocus);
+    return () => document.removeEventListener('visibilitychange', onFocus);
   }, [applyLoadedData]);
 
   const refreshData = useCallback(() => {
@@ -361,7 +342,7 @@ const App: React.FC = () => {
     localStorage.setItem('pg_daily_routes', JSON.stringify(dailyRoutes));
     localStorage.setItem('pg_fixed_expenses', JSON.stringify(fixedExpenses));
     localStorage.setItem('pg_agregados', JSON.stringify(agregados));
-    localStorage.setItem('pg_agregado_freights', JSON.stringify(uniqAgregadoFreights));
+    // agregadoFreights: SEMPRE do Supabase, nunca localStorage - evita excluídos voltarem
     localStorage.setItem('pg_tolls', JSON.stringify(tolls));
     localStorage.setItem('pg_antonio_equipe', JSON.stringify(antonioEquipe));
     localStorage.setItem('pg_tickets', JSON.stringify(tickets));
