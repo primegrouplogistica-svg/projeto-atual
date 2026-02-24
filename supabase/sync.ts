@@ -110,6 +110,15 @@ export async function loadAllFromSupabase(supabase: SupabaseClient): Promise<All
 
 export async function syncAllToSupabase(supabase: SupabaseClient, data: AllData): Promise<void> {
   try {
+    // Para agregado_freights: remover do Supabase os que não estão no estado local
+    // (evita que lançamentos excluídos voltem por race condition no sync)
+    const idsToKeep = new Set(data.agregadoFreights.map((f: any) => f.id).filter(Boolean));
+    const { data: existingRows } = await supabase.from('agregado_freights').select('id');
+    const idsToRemove = (existingRows ?? []).map((r: any) => r.id).filter((id: string) => !idsToKeep.has(id));
+    if (idsToRemove.length > 0) {
+      await Promise.all(idsToRemove.map((id: string) => supabase.from('agregado_freights').delete().eq('id', id)));
+    }
+
     const results = await Promise.all([
       data.users.length ? supabase.from('users').upsert(data.users.map(mapUserToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
       data.vehicles.length ? supabase.from('vehicles').upsert(data.vehicles.map(mapVehicleToDb), { onConflict: 'id' }) : Promise.resolve({ error: null }),
