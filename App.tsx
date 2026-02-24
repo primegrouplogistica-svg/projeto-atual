@@ -572,12 +572,14 @@ const App: React.FC = () => {
           else if (id.startsWith('agr-p-')) { const aid = id.replace('agr-p-', ''); if (supabase) await updateAgregadoFreightInSupabase(supabase, aid, { valorAgregado: 0 }); updateRecord(setAgregadoFreights, aid, { valorAgregado: 0 }); }
           else if (id.startsWith('agr-')) {
             const aid = id.replace('agr-', '');
-            if (supabase) {
-              const ok = await deleteAgregadoFreightFromSupabase(supabase, aid);
-              if (!ok) {
-                alert('Falha ao excluir no servidor. Tente novamente.');
-                return;
-              }
+            if (!supabase) {
+              alert('Sem conexão com o servidor. Conecte-se à internet e tente novamente.');
+              return;
+            }
+            const ok = await deleteAgregadoFreightFromSupabase(supabase, aid);
+            if (!ok) {
+              alert('Falha ao excluir no servidor. Verifique a internet e tente novamente.');
+              return;
             }
             deleteRecord(setAgregadoFreights, aid);
           }

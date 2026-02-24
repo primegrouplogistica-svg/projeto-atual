@@ -216,12 +216,13 @@ export async function updateAgregadoFreightInSupabase(supabase: SupabaseClient, 
 }
 
 export async function deleteAgregadoFreightFromSupabase(supabase: SupabaseClient, id: string): Promise<boolean> {
-  const { error } = await supabase.from('agregado_freights').delete().eq('id', id);
-  if (error) {
-    console.error('deleteAgregadoFreightFromSupabase:', error);
-    return false;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const { error } = await supabase.from('agregado_freights').delete().eq('id', id);
+    if (!error) return true;
+    console.error('deleteAgregadoFreightFromSupabase (tentativa ' + attempt + '):', error);
+    if (attempt < 2) await new Promise(r => setTimeout(r, 800)); // retry após 800ms
   }
-  return true;
+  return false;
 }
 
 export async function deleteTicketFromSupabase(supabase: SupabaseClient, id: string): Promise<void> {
